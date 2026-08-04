@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Aposentadoria · Vitor Souza</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #FAF8F4;
+  --white:   #FFFFFF;
+  --navy:    #0E1632;
+  --gold:    #B08C30;
+  --gold-m:  #C6A34E;
+  --gold-l:  #E8CD78;
+  --gray:    #767684;
+  --gray-l:  #D2CFC8;
+  --cream:   #F0EBD8;
+  --red:     #C0392B;
+  --green:   #1A7A4A;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg);
+  color: var(--navy);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 60px;
+}
+
+/* ── HEADER ── */
+.header {
+  width: 100%;
+  max-width: 680px;
+  padding: 40px 0 0;
+  text-align: center;
+}
+
+.header-tag {
+  display: inline-block;
+  background: var(--navy);
+  color: var(--gold-m);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  padding: 7px 18px;
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+
+.header h1 {
+  font-size: clamp(26px, 5vw, 40px);
+  font-weight: 900;
+  line-height: 1.15;
+  color: var(--navy);
+  margin-bottom: 14px;
+}
+
+.header h1 em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.header p {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--gray);
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto 40px;
+}
+
+.gold-bar {
+  width: 50px;
+  height: 3px;
+  background: var(--gold);
+  margin: 0 auto 40px;
+}
+
+/* ── CARD ── */
+.card {
+  width: 100%;
+  max-width: 680px;
+  background: var(--white);
+  border-radius: 20px;
+  border: 1px solid var(--gray-l);
+  overflow: hidden;
+  box-shadow: 0 4px 40px rgba(14,22,50,0.07);
+}
+
+/* ── STEPS NAV ── */
+.steps-nav {
+  display: flex;
+  border-bottom: 1px solid var(--gray-l);
+  background: var(--bg);
+}
+
+.step-dot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-l);
+  transition: all 0.3s;
+  position: relative;
+}
+
+.step-dot.active { color: var(--navy); }
+.step-dot.done   { color: var(--gold); }
+
+.step-dot .dot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--gray-l);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+  color: var(--white);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.step-dot.active .dot { background: var(--navy); }
+.step-dot.done   .dot { background: var(--gold); }
+
+.step-dot .label { display: none; }
+
+@media (min-width: 480px) {
+  .step-dot .label { display: block; }
+}
+
+/* ── STEP PANELS ── */
+.step-panel {
+  display: none;
+  padding: 40px 40px 36px;
+  animation: fadeIn 0.3s ease;
+}
+
+.step-panel.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── FORM FIELDS ── */
+.step-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.step-sub {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.field {
+  margin-bottom: 28px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.field label span {
+  font-weight: 500;
+  color: var(--gray);
+}
+
+.field input[type="number"],
+.field input[type="text"],
+.field input[type="tel"] {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1.5px solid var(--gray-l);
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+
+.field input::-webkit-outer-spin-button,
+.field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.field input:focus {
+  border-color: var(--gold);
+  background: var(--white);
+}
+
+.field input.error { border-color: var(--red); }
+
+.field .hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--gray);
+  font-weight: 500;
+}
+
+.field .err-msg {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--red);
+  font-weight: 600;
+  display: none;
+}
+
+.field .err-msg.show { display: block; }
+
+/* Slider */
+.slider-wrap {
+  position: relative;
+  padding-top: 4px;
+}
+
+.slider-val {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+
+.slider-val em {
+  font-style: normal;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray);
+  margin-left: 4px;
+}
+
+input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--gray-l);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--navy);
+  border: 3px solid var(--gold);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(14,22,50,0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--navy);
+  border: 3px solid var(--gold);
+  cursor: pointer;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+}
+
+/* Input with prefix */
+.input-prefix {
+  position: relative;
+}
+
+.input-prefix span {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold);
+  pointer-events: none;
+}
+
+.input-prefix input {
+  padding-left: 44px !important;
+}
+
+/* ── BUTTONS ── */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn {
+  flex: 1;
+  padding: 16px 24px;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: var(--navy);
+  color: var(--white);
+  box-shadow: 0 2px 12px rgba(14,22,50,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(198,163,78,0.4);
+  pointer-events: none;
+}
+
+.btn-primary:hover {
+  background: var(--gold);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(176,140,48,0.3);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--gray);
+  border: 1.5px solid var(--gray-l);
+}
+
+.btn-ghost:hover { border-color: var(--gray); color: var(--navy); }
+
+.btn-gold {
+  background: var(--gold);
+  color: var(--navy);
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 4px 20px rgba(176,140,48,0.35);
+}
+
+.btn-gold:hover {
+  background: var(--gold-l);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(176,140,48,0.45);
+}
+
+/* ── LEAD PANEL ── */
+.lead-intro {
+  background: var(--cream);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 28px;
+  border-left: 4px solid var(--gold);
+}
+
+.lead-intro p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.6;
+}
+
+.lead-intro strong { color: var(--gold); }
+
+.privacy-note {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--gray);
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── RESULT PANEL ── */
+.result-header {
+  background: var(--navy);
+  margin: -40px -40px 36px;
+  padding: 36px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--gold);
+}
+
+.result-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold-m);
+  margin-bottom: 16px;
+}
+
+.result-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 4px;
+}
+
+.result-headline {
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1.2;
+}
+
+.result-headline em {
+  font-style: normal;
+  color: var(--gold-l);
+}
+
+/* Metrics */
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.metric {
+  background: var(--bg);
+  border: 1px solid var(--gray-l);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 3px;
+}
+
+.metric.good::before  { background: var(--gold); }
+.metric.great::before { background: var(--green); }
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 8px;
+}
+
+.metric-val {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 900;
+  color: var(--navy);
+  line-height: 1;
+}
+
+.metric-val em {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray);
+  font-style: normal;
+  margin-left: 2px;
+}
+
+.metric-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+}
+
+/* Comparison */
+.comparison {
+  background: var(--cream);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+
+.comparison-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+
+.comp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-l);
+}
+
+.comp-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.comp-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  flex: 1;
+}
+
+.comp-label span {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray);
+  margin-top: 2px;
+}
+
+.comp-val {
+  font-size: 18px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.comp-val.low  { color: var(--red); }
+.comp-val.high { color: var(--green); }
+
+.comp-diff {
+  background: var(--navy);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comp-diff span {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+}
+
+.comp-diff strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--gold-l);
+}
+
+/* CTA result */
+.result-cta {
+  background: var(--navy);
+  border-radius: 14px;
+  padding: 28px;
+  text-align: center;
+}
+
+.result-cta p {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.result-cta p strong { color: var(--gold-m); }
+
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--gold);
+  color: var(--navy);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 18px 32px;
+  border-radius: 10px;
+  text-decoration: none;
+  width: 100%;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(176,140,48,0.35);
+}
+
+.wa-btn:hover {
+  background: var(--gold-l);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(176,140,48,0.45);
+}
+
+.wa-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+.restart-btn {
+  display: block;
+  margin: 16px auto 0;
+  background: none;
+  border: none;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.restart-btn:hover { color: var(--navy); }
+
+/* ── FOOTER ── */
+.footer {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray);
+  line-height: 1.7;
+}
+
+.footer strong { color: var(--gold); font-weight: 700; }
+
+@media (max-width: 520px) {
+  .step-panel { padding: 28px 24px; }
+  .result-header { margin: -28px -24px 28px; padding: 28px 24px; }
+  .metrics { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-tag">Ferramenta gratuita</div>
+  <h1>Quanto você terá<br>na <em>aposentadoria?</em></h1>
+  <p>Descubra em 2 minutos o impacto real da estratégia certa nos seus investimentos.</p>
+  <div class="gold-bar"></div>
+</div>
+
+<div class="card">
+
+  <!-- Steps nav -->
+  <div class="steps-nav">
+    <div class="step-dot active" id="nav-1">
+      <div class="dot">1</div>
+      <span class="label">Seu perfil</span>
+    </div>
+    <div class="step-dot" id="nav-2">
+      <div class="dot">2</div>
+      <span class="label">Investimentos</span>
+    </div>
+    <div class="step-dot" id="nav-3">
+      <div class="dot">3</div>
+      <span class="label">Seus dados</span>
+    </div>
+    <div class="step-dot" id="nav-4">
+      <div class="dot">4</div>
+      <span class="label">Resultado</span>
+    </div>
+  </div>
+
+  <!-- STEP 1 — Perfil -->
+  <div class="step-panel active" id="step-1">
+    <p class="step-title">Sobre você</p>
+    <p class="step-sub">Vamos calcular quantos anos você tem para construir patrimônio.</p>
+
+    <div class="field">
+      <label>Sua idade atual</label>
+      <div class="slider-wrap">
+        <div class="slider-val" id="val-idade">35 <em>anos</em></div>
+        <input type="range" id="slider-idade" min="20" max="65" value="35">
+        <div class="slider-labels"><span>20</span><span>65</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Quer se aposentar com</label>
+      <div class="slider-wrap">
+        <div class="slider-val" id="val-apos">60 <em>anos</em></div>
+        <input type="range" id="slider-apos" min="45" max="75" value="60">
+        <div class="slider-labels"><span>45</span><span>75</span></div>
+      </div>
+      <div class="hint" id="anos-hint">→ 25 anos para investir</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goTo(2)">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 — Investimentos -->
+  <div class="step-panel" id="step-2">
+    <p class="step-title">Sua situação atual</p>
+    <p class="step-sub">Quanto você já tem investido e quanto consegue colocar todo mês.</p>
+
+    <div class="field">
+      <label>Patrimônio investido hoje <span>(pode ser R$ 0)</span></label>
+      <div class="input-prefix">
+        <span>R$</span>
+        <input type="number" id="inp-patrimonio" placeholder="0" min="0" max="10000000">
+      </div>
+      <div class="err-msg" id="err-patrimonio">Informe um valor válido</div>
+    </div>
+
+    <div class="field">
+      <label>Aporte mensal <span>(quanto vai investir por mês)</span></label>
+      <div class="input-prefix">
+        <span>R$</span>
+        <input type="number" id="inp-aporte" placeholder="500" min="50" max="1000000">
+      </div>
+      <div class="err-msg" id="err-aporte">Informe pelo menos R$ 50/mês</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goTo(1)">← Voltar</button>
+      <button class="btn btn-primary" onclick="validateStep2()">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 — Lead capture -->
+  <div class="step-panel" id="step-3">
+    <p class="step-title">Quase lá.</p>
+    <p class="step-sub">Seu resultado está pronto. Informe seus dados para acessar.</p>
+
+    <div class="lead-intro">
+      <p>Vitor vai analisar sua simulação e pode entrar em contato com uma <strong>estratégia personalizada</strong> para o seu caso — sem compromisso.</p>
+    </div>
+
+    <div class="field">
+      <label>Seu nome</label>
+      <input type="text" id="inp-nome" placeholder="Como prefere ser chamado">
+      <div class="err-msg" id="err-nome">Informe seu nome</div>
+    </div>
+
+    <div class="field">
+      <label>WhatsApp <span>(com DDD)</span></label>
+      <input type="tel" id="inp-wpp" placeholder="(11) 99999-9999" maxlength="15">
+      <div class="err-msg" id="err-wpp">Informe um WhatsApp válido</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goTo(2)">← Voltar</button>
+      <button class="btn btn-gold" onclick="validateStep3()">Ver meu resultado →</button>
+    </div>
+
+    <p class="privacy-note">🔒 Seus dados são usados apenas para contato. Não há spam.</p>
+  </div>
+
+  <!-- STEP 4 — Result -->
+  <div class="step-panel" id="step-4">
+    <div class="result-header">
+      <p class="result-tag">Sua simulação</p>
+      <p class="result-name" id="res-saudacao"></p>
+      <p class="result-headline" id="res-headline"></p>
+    </div>
+
+    <div class="metrics">
+      <div class="metric good">
+        <p class="metric-label">Patrimônio estimado</p>
+        <p class="metric-val" id="res-patrimonio-final"></p>
+        <p class="metric-sub" id="res-anos-label"></p>
+      </div>
+      <div class="metric great">
+        <p class="metric-label">Renda mensal estimada</p>
+        <p class="metric-val" id="res-renda"></p>
+        <p class="metric-sub">por mês (0,5% a.m.)</p>
+      </div>
+    </div>
+
+    <div class="comparison">
+      <p class="comparison-title">Comparativo de estratégia</p>
+      <div class="comp-row">
+        <div class="comp-label">
+          Poupança
+          <span>~70% do CDI · ~6% a.a. real</span>
+        </div>
+        <div class="comp-val low" id="res-poup"></div>
+      </div>
+      <div class="comp-row">
+        <div class="comp-label">
+          Carteira diversificada
+          <span>IPCA+ · CDI · Renda variável</span>
+        </div>
+        <div class="comp-val high" id="res-div"></div>
+      </div>
+      <div class="comp-diff">
+        <span>Diferença entre as estratégias</span>
+        <strong id="res-diff"></strong>
+      </div>
+    </div>
+
+    <div class="result-cta">
+      <p>Essa é uma estimativa. O resultado real depende da <strong>estratégia certa para o seu perfil</strong>. Vitor pode montar isso com você — de graça.</p>
+      <a class="wa-btn" id="wa-link" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.122 1.523 5.86L.057 23.999l6.305-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.003-1.366l-.36-.213-3.72.976.994-3.634-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>
+        Falar com Vitor sobre minha estratégia
+      </a>
+      <button class="restart-btn" onclick="restart()">Refazer simulação</button>
+    </div>
+  </div>
+
+</div>
+
+<p class="footer">
+  Simulação com fins educativos. Rentabilidades passadas não garantem resultados futuros.<br>
+  <strong>Vitor Souza · Assessor XP Investimentos · @vitorsouzainvest</strong>
+</p>
+
+<script>
+// ── STATE ───────────────────────────────────────────────
+const state = {
+  idade: 35, aposem: 60,
+  patrimonio: 0, aporte: 500,
+  nome: '', wpp: ''
+};
+
+// ── NAVIGATION ──────────────────────────────────────────
+function goTo(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.step-dot').forEach((d, i) => {
+    d.classList.remove('active', 'done');
+    if (i + 1 < n) d.classList.add('done');
+    if (i + 1 === n) d.classList.add('active');
+  });
+  document.getElementById('step-' + n).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── SLIDERS ─────────────────────────────────────────────
+const sliderIdade = document.getElementById('slider-idade');
+const sliderApos  = document.getElementById('slider-apos');
+const valIdade    = document.getElementById('val-idade');
+const valApos     = document.getElementById('val-apos');
+const anosHint    = document.getElementById('anos-hint');
+
+function updateSliders() {
+  state.idade  = +sliderIdade.value;
+  state.aposem = +sliderApos.value;
+  valIdade.innerHTML = state.idade + ' <em>anos</em>';
+  valApos.innerHTML  = state.aposem + ' <em>anos</em>';
+  const anos = Math.max(0, state.aposem - state.idade);
+  anosHint.textContent = anos > 0
+    ? '→ ' + anos + ' anos para investir'
+    : '→ Ajuste as idades';
+  if (state.aposem <= state.idade) {
+    sliderApos.value = state.idade + 1;
+    state.aposem = state.idade + 1;
+    valApos.innerHTML = state.aposem + ' <em>anos</em>';
+  }
+}
+
+sliderIdade.addEventListener('input', updateSliders);
+sliderApos.addEventListener('input', updateSliders);
+updateSliders();
+
+// ── VALIDATION ──────────────────────────────────────────
+function validateStep2() {
+  const p = document.getElementById('inp-patrimonio').value;
+  const a = document.getElementById('inp-aporte').value;
+  let ok = true;
+
+  if (p === '' || +p < 0) {
+    document.getElementById('inp-patrimonio').classList.add('error');
+    document.getElementById('err-patrimonio').classList.add('show');
+    ok = false;
+  } else {
+    document.getElementById('inp-patrimonio').classList.remove('error');
+    document.getElementById('err-patrimonio').classList.remove('show');
+    state.patrimonio = +p;
+  }
+
+  if (!a || +a < 50) {
+    document.getElementById('inp-aporte').classList.add('error');
+    document.getElementById('err-aporte').classList.add('show');
+    ok = false;
+  } else {
+    document.getElementById('inp-aporte').classList.remove('error');
+    document.getElementById('err-aporte').classList.remove('show');
+    state.aporte = +a;
+  }
+
+  if (ok) goTo(3);
+}
+
+function validateStep3() {
+  const nome = document.getElementById('inp-nome').value.trim();
+  const wpp  = document.getElementById('inp-wpp').value.replace(/\D/g, '');
+  let ok = true;
+
+  if (!nome) {
+    document.getElementById('inp-nome').classList.add('error');
+    document.getElementById('err-nome').classList.add('show');
+    ok = false;
+  } else {
+    document.getElementById('inp-nome').classList.remove('error');
+    document.getElementById('err-nome').classList.remove('show');
+    state.nome = nome;
+  }
+
+  if (wpp.length < 10) {
+    document.getElementById('inp-wpp').classList.add('error');
+    document.getElementById('err-wpp').classList.add('show');
+    ok = false;
+  } else {
+    document.getElementById('inp-wpp').classList.remove('error');
+    document.getElementById('err-wpp').classList.remove('show');
+    state.wpp = wpp;
+  }
+
+  if (ok) {
+    buildResult();
+    goTo(4);
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxSyrSIhGErriPqYOu1H4nji90Wdgp-S_Awh0ViZqH/exec';
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome:       state.nome,
+        wpp:        state.wpp,
+        idade:      state.idade,
+        aposem:     state.aposem,
+        patrimonio: state.patrimonio,
+        aporte:     state.aporte
+      })
+    }).catch(function() {});
+  }
+}
+
+// WhatsApp mask
+document.getElementById('inp-wpp').addEventListener('input', function() {
+  let v = this.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length >= 7)
+    v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+  else if (v.length >= 3)
+    v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+  this.value = v;
+});
+
+// ── MATH ────────────────────────────────────────────────
+function futureValue(pv, pmt, rate, n) {
+  // FV = PV*(1+r)^n + PMT*[((1+r)^n - 1)/r]
+  const factor = Math.pow(1 + rate, n);
+  return pv * factor + pmt * ((factor - 1) / rate);
+}
+
+function fmt(val) {
+  if (val >= 1e6) return 'R$ ' + (val / 1e6).toFixed(2).replace('.', ',') + ' mi';
+  return 'R$ ' + Math.round(val).toLocaleString('pt-BR');
+}
+
+function buildResult() {
+  const anos = Math.max(1, state.aposem - state.idade);
+  const n    = anos * 12;
+  const pv   = state.patrimonio;
+  const pmt  = state.aporte;
+
+  // Poupança: ~6% a.a. = ~0.487% a.m.
+  const rPoup = 0.06 / 12;
+  // Carteira diversificada: ~11% a.a. = ~0.873% a.m.
+  const rDiv  = 0.11 / 12;
+
+  const fvPoup = futureValue(pv, pmt, rPoup, n);
+  const fvDiv  = futureValue(pv, pmt, rDiv, n);
+  const diff   = fvDiv - fvPoup;
+
+  // Renda: 0.5% a.m. sobre patrimônio diversificado
+  const renda = fvDiv * 0.005;
+
+  // Headline
+  const nomeFirst = state.nome.split(' ')[0];
+  document.getElementById('res-saudacao').textContent = nomeFirst + ', aqui está sua simulação:';
+
+  const heMsg = renda >= 5000
+    ? 'Com a estratégia certa, você pode ter <em>renda de ' + fmt(renda) + '/mês</em> na aposentadoria.'
+    : 'Com a estratégia certa, seu patrimônio pode chegar a <em>' + fmt(fvDiv) + '</em>.';
+  document.getElementById('res-headline').innerHTML = heMsg;
+
+  document.getElementById('res-patrimonio-final').innerHTML = fmt(fvDiv).replace('R$ ', 'R$<br>') + ' <em></em>';
+  document.getElementById('res-anos-label').textContent = 'em ' + anos + ' anos';
+  document.getElementById('res-renda').innerHTML = fmt(renda).replace('R$ ', 'R$<br>') + ' <em></em>';
+
+  document.getElementById('res-poup').textContent = fmt(fvPoup);
+  document.getElementById('res-div').textContent  = fmt(fvDiv);
+  document.getElementById('res-diff').textContent = '+ ' + fmt(diff);
+
+  // WhatsApp link with context
+  const msg = encodeURIComponent(
+    'Olá Vitor! Fiz a simulação no seu site. ' +
+    'Tenho ' + state.idade + ' anos, quero me aposentar aos ' + state.aposem + ', ' +
+    'tenho R$ ' + state.patrimonio.toLocaleString('pt-BR') + ' investidos e aporto R$ ' +
+    state.aporte.toLocaleString('pt-BR') + '/mês. ' +
+    'Quero entender a melhor estratégia para o meu caso.'
+  );
+  document.getElementById('wa-link').href =
+    'https://wa.me/5511997743956?text=' + msg;
+}
+
+function restart() {
+  document.getElementById('inp-patrimonio').value = '';
+  document.getElementById('inp-aporte').value = '';
+  document.getElementById('inp-nome').value = '';
+  document.getElementById('inp-wpp').value = '';
+  goTo(1);
+}
+</script>
+</body>
+</html>
