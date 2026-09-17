@@ -449,6 +449,13 @@ input[type="range"]::-moz-range-thumb {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  margin-bottom: 16px;
+}
+
+.metrics-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   margin-bottom: 28px;
 }
 
@@ -487,6 +494,11 @@ input[type="range"]::-moz-range-thumb {
   line-height: 1;
 }
 
+.metrics-3 .metric-val {
+  font-size: clamp(15px, 2.2vw, 19px);
+  line-height: 1.15;
+}
+
 .metric-val em {
   font-size: 14px;
   font-weight: 600;
@@ -495,8 +507,117 @@ input[type="range"]::-moz-range-thumb {
   margin-left: 2px;
 }
 
+.metrics-3 .metric-val em { font-size: 12px; }
+
 .metric-sub {
   margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+}
+
+/* Chart block */
+.chart-block {
+  background: var(--bg);
+  border: 1px solid var(--gray-l);
+  border-radius: 14px;
+  padding: 24px 20px 18px;
+  margin-bottom: 28px;
+}
+
+.chart-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Composition bar */
+.comp-bar {
+  display: flex;
+  height: 38px;
+  border-radius: 9px;
+  overflow: hidden;
+  margin: 16px 0 14px;
+  background: var(--gray-l);
+}
+
+.comp-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--white);
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.seg-inicial { background: var(--navy); }
+.seg-aportes { background: var(--gold); }
+.seg-cresc   { background: var(--green); }
+.seg-poup    { background: var(--red); }
+
+.comp-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-l);
+}
+
+.comp-legend-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.comp-legend-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.comp-legend-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+  text-align: right;
+}
+
+.comp-legend-val em {
+  font-style: normal;
   font-size: 12px;
   font-weight: 600;
   color: var(--gray);
@@ -619,6 +740,29 @@ input[type="range"]::-moz-range-thumb {
 
 .wa-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
 
+.dl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 16px 24px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.28);
+  background: transparent;
+  color: var(--white);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dl-btn:hover { border-color: var(--gold-m); color: var(--gold-l); }
+
+.dl-btn:disabled { opacity: 0.55; cursor: wait; }
+
 .restart-btn {
   display: block;
   margin: 16px auto 0;
@@ -651,6 +795,7 @@ input[type="range"]::-moz-range-thumb {
   .step-panel { padding: 28px 24px; }
   .result-header { margin: -28px -24px 28px; padding: 28px 24px; }
   .metrics { grid-template-columns: 1fr; }
+  .metrics-3 { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -659,7 +804,7 @@ input[type="range"]::-moz-range-thumb {
 <div class="header">
   <div class="header-tag">Ferramenta gratuita</div>
   <h1>Quanto você terá<br>na <em>aposentadoria?</em></h1>
-  <p>Descubra em 2 minutos o impacto real da estratégia certa nos seus investimentos.</p>
+  <p>Descubra em 2 minutos o impacto da rentabilidade nos seus investimentos.</p>
   <div class="gold-bar"></div>
 </div>
 
@@ -725,7 +870,7 @@ input[type="range"]::-moz-range-thumb {
         <span>R$</span>
         <input type="number" id="inp-patrimonio" placeholder="0" min="0" max="10000000">
       </div>
-      <div class="err-msg" id="err-patrimonio">Informe um valor válido</div>
+      <div class="err-msg" id="err-patrimonio">Informe um valor entre R$ 0 e R$ 10.000.000</div>
     </div>
 
     <div class="field">
@@ -734,7 +879,7 @@ input[type="range"]::-moz-range-thumb {
         <span>R$</span>
         <input type="number" id="inp-aporte" placeholder="500" min="50" max="1000000">
       </div>
-      <div class="err-msg" id="err-aporte">Informe pelo menos R$ 50/mês</div>
+      <div class="err-msg" id="err-aporte">Informe um valor entre R$ 50 e R$ 1.000.000</div>
     </div>
 
     <div class="btn-row">
@@ -749,7 +894,7 @@ input[type="range"]::-moz-range-thumb {
     <p class="step-sub">Seu resultado está pronto. Informe seus dados para acessar.</p>
 
     <div class="lead-intro">
-      <p>Vitor vai analisar sua simulação e pode entrar em contato com uma <strong>estratégia personalizada</strong> para o seu caso — sem compromisso.</p>
+      <p>Vitor vai analisar sua simulação e pode entrar em contato para conversar sobre alternativas para o seu caso — sem compromisso.</p>
     </div>
 
     <div class="field">
@@ -782,45 +927,81 @@ input[type="range"]::-moz-range-thumb {
 
     <div class="metrics">
       <div class="metric good">
-        <p class="metric-label">Patrimônio estimado</p>
+        <p class="metric-label">Patrimônio final</p>
         <p class="metric-val" id="res-patrimonio-final"></p>
         <p class="metric-sub" id="res-anos-label"></p>
       </div>
       <div class="metric great">
-        <p class="metric-label">Renda mensal estimada</p>
+        <p class="metric-label">Renda mensal de referência</p>
         <p class="metric-val" id="res-renda"></p>
-        <p class="metric-sub">por mês (0,5% a.m.)</p>
+        <p class="metric-sub">considerando 0,5% a.m.</p>
       </div>
     </div>
 
+    <div class="metrics-3">
+      <div class="metric good">
+        <p class="metric-label">Tempo até aposentar</p>
+        <p class="metric-val" id="res-tempo"></p>
+        <p class="metric-sub" id="res-tempo-sub"></p>
+      </div>
+      <div class="metric good">
+        <p class="metric-label">Total aportado</p>
+        <p class="metric-val" id="res-aportado"></p>
+        <p class="metric-sub" id="res-aportado-sub"></p>
+      </div>
+      <div class="metric great">
+        <p class="metric-label">Crescimento estimado</p>
+        <p class="metric-val" id="res-crescimento"></p>
+        <p class="metric-sub">juros no período</p>
+      </div>
+    </div>
+
+    <div class="chart-block">
+      <p class="chart-title">Evolução do patrimônio</p>
+      <div class="chart-legend">
+        <div class="legend-item"><span class="legend-dot seg-cresc"></span>Cenário de referência</div>
+        <div class="legend-item"><span class="legend-dot seg-poup"></span>Poupança</div>
+      </div>
+      <div id="chart-evolucao"></div>
+    </div>
+
+    <div class="chart-block">
+      <p class="chart-title">Composição do patrimônio final</p>
+      <div class="comp-bar" id="comp-bar"></div>
+      <div id="comp-legend"></div>
+    </div>
+
     <div class="comparison">
-      <p class="comparison-title">Comparativo de estratégia</p>
+      <p class="comparison-title">Comparativo de cenários</p>
       <div class="comp-row">
         <div class="comp-label">
           Poupança
-          <span>~70% do CDI · ~6% a.a. real</span>
+          <span>Hipótese de 6% a.a.</span>
         </div>
         <div class="comp-val low" id="res-poup"></div>
       </div>
       <div class="comp-row">
         <div class="comp-label">
-          Carteira diversificada
-          <span>IPCA+ · CDI · Renda variável</span>
+          Cenário de referência
+          <span>Hipótese de 11% a.a.</span>
         </div>
         <div class="comp-val high" id="res-div"></div>
       </div>
       <div class="comp-diff">
-        <span>Diferença entre as estratégias</span>
+        <span>Diferença entre os cenários</span>
         <strong id="res-diff"></strong>
       </div>
     </div>
 
     <div class="result-cta">
-      <p>Essa é uma estimativa. O resultado real depende da <strong>estratégia certa para o seu perfil</strong>. Vitor pode montar isso com você — de graça.</p>
+      <p>Esta é uma projeção hipotética, baseada em hipóteses de rentabilidade. O resultado real depende das decisões, das condições de mercado e da estratégia escolhida para o seu perfil. Vitor pode analisar o seu caso — sem compromisso.</p>
       <a class="wa-btn" id="wa-link" href="#" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.122 1.523 5.86L.057 23.999l6.305-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.003-1.366l-.36-.213-3.72.976.994-3.634-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>
-        Falar com Vitor sobre minha estratégia
+        Falar com Vitor sobre meu planejamento
       </a>
+      <button class="dl-btn" id="dl-btn" onclick="downloadResultImage()">
+        ↓ Baixar minha simulação
+      </button>
       <button class="restart-btn" onclick="restart()">Refazer simulação</button>
     </div>
   </div>
@@ -839,6 +1020,9 @@ const state = {
   patrimonio: 0, aporte: 500,
   nome: '', wpp: ''
 };
+
+// Resultado atual, usado pela geração da imagem
+const resultData = { fvDiv: 0, renda: 0, anos: 0, series: [] };
 
 // ── NAVIGATION ──────────────────────────────────────────
 function goTo(n) {
@@ -885,7 +1069,7 @@ function validateStep2() {
   const a = document.getElementById('inp-aporte').value;
   let ok = true;
 
-  if (p === '' || +p < 0) {
+  if (p === '' || +p < 0 || +p > 10000000) {
     document.getElementById('inp-patrimonio').classList.add('error');
     document.getElementById('err-patrimonio').classList.add('show');
     ok = false;
@@ -895,7 +1079,7 @@ function validateStep2() {
     state.patrimonio = +p;
   }
 
-  if (!a || +a < 50) {
+  if (!a || +a < 50 || +a > 1000000) {
     document.getElementById('inp-aporte').classList.add('error');
     document.getElementById('err-aporte').classList.add('show');
     ok = false;
@@ -975,16 +1159,86 @@ function fmt(val) {
   return 'R$ ' + Math.round(val).toLocaleString('pt-BR');
 }
 
+function fmtShort(val) {
+  if (val >= 1e6) return 'R$ ' + (val / 1e6).toFixed(1).replace('.', ',') + ' mi';
+  if (val >= 1e3) return 'R$ ' + Math.round(val / 1e3) + ' mil';
+  return 'R$ ' + Math.round(val);
+}
+
+// ── CHART: evolução do patrimônio ──────────────────────
+function renderChart(ptsPoup, ptsDiv, anos) {
+  const W = 640, H = 300;
+  const pad = { t: 16, r: 14, b: 36, l: 70 };
+  const maxV = Math.max.apply(null, ptsDiv) * 1.06 || 1;
+  const last = ptsDiv.length - 1;
+
+  const x = i => pad.l + (W - pad.l - pad.r) * (i / last);
+  const y = v => pad.t + (H - pad.t - pad.b) * (1 - v / maxV);
+
+  const line = pts => pts.map((v, i) =>
+    (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)
+  ).join(' ');
+
+  // Gridlines + eixo Y
+  let grid = '';
+  for (let g = 0; g <= 4; g++) {
+    const v = maxV * g / 4;
+    const yy = y(v);
+    grid += '<line x1="' + pad.l + '" y1="' + yy.toFixed(1) + '" x2="' + (W - pad.r) + '" y2="' + yy.toFixed(1) + '" stroke="#D2CFC8" stroke-width="1"' + (g ? ' stroke-dasharray="3 4"' : '') + '/>';
+    grid += '<text x="' + (pad.l - 8) + '" y="' + (yy + 4).toFixed(1) + '" text-anchor="end" font-size="11" font-weight="600" fill="#767684" font-family="Montserrat, sans-serif">' + fmtShort(v) + '</text>';
+  }
+
+  // Eixo X (anos)
+  const stepX = Math.max(1, Math.ceil(anos / 6));
+  let xlab = '';
+  for (let yr = 0; yr <= anos; yr += stepX) {
+    xlab += '<text x="' + x(yr).toFixed(1) + '" y="' + (H - pad.b + 22) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#767684" font-family="Montserrat, sans-serif">' + yr + 'a</text>';
+  }
+
+  const svg =
+    '<svg class="chart-svg" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Evolução do patrimônio ao longo do tempo">' +
+    grid + xlab +
+    '<path d="' + line(ptsPoup) + '" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="' + line(ptsDiv) + '" fill="none" stroke="#B08C30" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>';
+
+  document.getElementById('chart-evolucao').innerHTML = svg;
+}
+
+// ── COMPOSIÇÃO do patrimônio final ─────────────────────
+function renderComposition(pv, totalAp, cresc, fv) {
+  const parts = [
+    { label: 'Patrimônio inicial',     val: pv,      cls: 'seg-inicial' },
+    { label: 'Total de aportes',       val: totalAp, cls: 'seg-aportes' },
+    { label: 'Crescimento estimado',   val: cresc,   cls: 'seg-cresc' }
+  ];
+
+  let bar = '', legend = '';
+  parts.forEach(function(p) {
+    const pct = fv > 0 ? (p.val / fv * 100) : 0;
+    if (pct > 0.5) {
+      bar += '<div class="comp-seg ' + p.cls + '" style="width:' + pct + '%">' + (pct >= 14 ? Math.round(pct) + '%' : '') + '</div>';
+    }
+    legend += '<div class="comp-legend-row">' +
+      '<div class="comp-legend-label"><span class="legend-dot ' + p.cls + '"></span>' + p.label + '</div>' +
+      '<div class="comp-legend-val">' + fmt(p.val) + ' <em>(' + Math.round(pct) + '%)</em></div>' +
+      '</div>';
+  });
+
+  document.getElementById('comp-bar').innerHTML = bar;
+  document.getElementById('comp-legend').innerHTML = legend;
+}
+
 function buildResult() {
   const anos = Math.max(1, state.aposem - state.idade);
   const n    = anos * 12;
   const pv   = state.patrimonio;
   const pmt  = state.aporte;
 
-  // Poupança: ~6% a.a. = ~0.487% a.m.
-  const rPoup = 0.06 / 12;
-  // Carteira diversificada: ~11% a.a. = ~0.873% a.m.
-  const rDiv  = 0.11 / 12;
+  // Poupança: hipótese de 6% a.a. efetiva → taxa mensal equivalente
+  const rPoup = Math.pow(1 + 0.06, 1/12) - 1;
+  // Cenário de referência: hipótese de 11% a.a. efetiva → taxa mensal equivalente
+  const rDiv  = Math.pow(1 + 0.11, 1/12) - 1;
 
   const fvPoup = futureValue(pv, pmt, rPoup, n);
   const fvDiv  = futureValue(pv, pmt, rDiv, n);
@@ -993,22 +1247,52 @@ function buildResult() {
   // Renda: 0.5% a.m. sobre patrimônio diversificado
   const renda = fvDiv * 0.005;
 
+  // Indicadores novos
+  const totalAportado = pmt * n;
+  const crescimento   = fvDiv - pv - totalAportado;
+
   // Headline
   const nomeFirst = state.nome.split(' ')[0];
   document.getElementById('res-saudacao').textContent = nomeFirst + ', aqui está sua simulação:';
 
   const heMsg = renda >= 5000
-    ? 'Com a estratégia certa, você pode ter <em>renda de ' + fmt(renda) + '/mês</em> na aposentadoria.'
-    : 'Com a estratégia certa, seu patrimônio pode chegar a <em>' + fmt(fvDiv) + '</em>.';
+    ? 'Neste cenário, você poderia ter <em>renda de ' + fmt(renda) + '/mês</em> na aposentadoria.'
+    : 'Neste cenário, seu patrimônio poderia chegar a <em>' + fmt(fvDiv) + '</em>.';
   document.getElementById('res-headline').innerHTML = heMsg;
 
   document.getElementById('res-patrimonio-final').innerHTML = fmt(fvDiv).replace('R$ ', 'R$<br>') + ' <em></em>';
   document.getElementById('res-anos-label').textContent = 'em ' + anos + ' anos';
   document.getElementById('res-renda').innerHTML = fmt(renda).replace('R$ ', 'R$<br>') + ' <em></em>';
 
+  // Novos indicadores
+  document.getElementById('res-tempo').innerHTML = anos + ' <em>anos</em>';
+  document.getElementById('res-tempo-sub').textContent = 'aposentadoria aos ' + state.aposem + ' anos';
+  document.getElementById('res-aportado').innerHTML = fmt(totalAportado).replace('R$ ', 'R$<br>');
+  document.getElementById('res-aportado-sub').textContent = fmt(state.aporte) + '/mês';
+  document.getElementById('res-crescimento').innerHTML = fmt(crescimento).replace('R$ ', 'R$<br>');
+
   document.getElementById('res-poup').textContent = fmt(fvPoup);
   document.getElementById('res-div').textContent  = fmt(fvDiv);
   document.getElementById('res-diff').textContent = '+ ' + fmt(diff);
+
+  // Dados para a imagem do resultado
+  resultData.fvDiv = fvDiv;
+  resultData.renda = renda;
+  resultData.anos  = anos;
+
+  // Gráfico de evolução (amostragem anual, mês a mês igual ao cálculo)
+  const ptsPoup = [], ptsDiv = [];
+  for (let yr = 0; yr <= anos; yr++) {
+    ptsPoup.push(futureValue(pv, pmt, rPoup, yr * 12));
+    ptsDiv.push(futureValue(pv, pmt, rDiv, yr * 12));
+  }
+  renderChart(ptsPoup, ptsDiv, anos);
+
+  // Série da carteira para a imagem do resultado
+  resultData.series = ptsDiv;
+
+  // Composição do patrimônio final
+  renderComposition(pv, totalAportado, crescimento, fvDiv);
 
   // WhatsApp link with context
   const msg = encodeURIComponent(
@@ -1016,10 +1300,254 @@ function buildResult() {
     'Tenho ' + state.idade + ' anos, quero me aposentar aos ' + state.aposem + ', ' +
     'tenho R$ ' + state.patrimonio.toLocaleString('pt-BR') + ' investidos e aporto R$ ' +
     state.aporte.toLocaleString('pt-BR') + '/mês. ' +
-    'Quero entender a melhor estratégia para o meu caso.'
+    'Quero entender as opções para o meu caso.'
   );
   document.getElementById('wa-link').href =
     'https://wa.me/5511997743956?text=' + msg;
+}
+
+// ── GERAÇÃO DA IMAGEM DO RESULTADO ─────────────────────
+function fmtFull(val) {
+  return 'R$ ' + Math.round(val).toLocaleString('pt-BR');
+}
+
+function downloadResultImage() {
+  const btn = document.getElementById('dl-btn');
+  btn.disabled = true;
+  btn.textContent = 'Gerando imagem...';
+
+  // Deixa o browser pintar o estado "gerando" antes do trabalho pesado
+  setTimeout(function() {
+    try { generateAndDownload(); } finally {
+      btn.disabled = false;
+      btn.textContent = '↓ Baixar minha simulação';
+    }
+  }, 30);
+}
+
+function generateAndDownload() {
+  const canvas = buildResultCanvas();
+  canvas.toBlob(function(blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'minha-simulacao-aposentadoria-vitor-souza.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1500);
+  }, 'image/png');
+}
+
+function buildResultCanvas() {
+  const W = 1080, H = 1350;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const NAVY    = '#0E1632';
+  const NAVY_D  = '#0A1126';
+  const GOLD    = '#B08C30';
+  const GOLD_M  = '#C6A34E';
+  const GOLD_L  = '#E8CD78';
+  const OFFW    = '#F5F2EA';
+  const GRAYW   = 'rgba(245,242,234,0.62)';
+  const GRAYW2  = 'rgba(245,242,234,0.38)';
+
+  // ── Fundo ──
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, NAVY);
+  bg.addColorStop(1, NAVY_D);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Filete dourado no topo
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(0, 0, W, 6);
+
+  // ── Tipografia Montserrat (com fallback seguro) ──
+  const F = 'Montserrat, Arial, sans-serif';
+  const weights = [400, 500, 600, 700, 800, 900];
+  ctx.textBaseline = 'alphabetic';
+  weights.forEach(w => { ctx.font = w + ' 12px ' + F; ctx.fillText('.', -50, -50); });
+
+  // ── Cabeçalho ──
+  const title = 'Quanto você poderá construir';
+  const title2 = 'até a aposentadoria?';
+  ctx.textAlign = 'center';
+  ctx.font = '800 44px ' + F;
+  ctx.fillStyle = OFFW;
+  ctx.fillText(title, W / 2, 118);
+  ctx.fillText(title2, W / 2, 172);
+  ctx.font = '800 44px ' + F;
+  ctx.fillStyle = GOLD_M;
+  ctx.fillText('até a aposentadoria?', W / 2, 172);
+
+  const nomeFirst = (state.nome || 'Cliente').trim().split(/\s+/)[0];
+  ctx.font = '600 26px ' + F;
+  ctx.fillStyle = GRAYW;
+  ctx.fillText(nomeFirst + ', esta é a sua projeção', W / 2, 236);
+
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(W / 2 - 27, 268, 54, 4);
+
+  // ── Patrimônio projetado (destaque principal) ──
+  const patText = fmtFull(resultData.fvDiv);
+  const rendaText = fmtFull(resultData.renda) + ' /mês';
+
+  ctx.textAlign = 'center';
+  ctx.font = '800 17px ' + F;
+  ctx.fillStyle = GOLD_M;
+  ctx.fillText('P A T R I M Ô N I O   P R O J E T A D O', W / 2, 356);
+
+  // Ajusta o tamanho da fonte ao comprimento do valor
+  let patSize = 88;
+  ctx.font = '900 ' + patSize + 'px ' + F;
+  while (ctx.measureText(patText).width > W - 160 && patSize > 44) {
+    patSize -= 4;
+    ctx.font = '900 ' + patSize + 'px ' + F;
+  }
+  ctx.fillStyle = OFFW;
+  ctx.fillText(patText, W / 2, 458);
+
+  ctx.font = '600 24px ' + F;
+  ctx.fillStyle = GRAYW;
+  ctx.fillText('em ' + resultData.anos + ' anos de investimento', W / 2, 508);
+
+  // Linha divisória fina
+  ctx.strokeStyle = 'rgba(198,163,78,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(100, 552);
+  ctx.lineTo(W - 100, 552);
+  ctx.stroke();
+
+  // ── Renda mensal de referência (destaque secundário) ──
+  ctx.font = '800 15px ' + F;
+  ctx.fillStyle = GOLD_M;
+  ctx.fillText('R E N D A   M E N S A L   D E   R E F E R Ê N C I A', W / 2, 606);
+
+  let renSize = 58;
+  ctx.font = '900 ' + renSize + 'px ' + F;
+  while (ctx.measureText(rendaText).width > W - 200 && renSize > 34) {
+    renSize -= 4;
+    ctx.font = '900 ' + renSize + 'px ' + F;
+  }
+  ctx.fillStyle = GOLD_L;
+  ctx.fillText(rendaText, W / 2, 668);
+
+  // ── Grid 2×2: idade, aposentadoria, aporte, tempo ──
+  const cardY = 724, cardH = 118, cardW = (W - 200 - 24) / 2;
+  const cards = [
+    { label: 'IDADE ATUAL',      value: state.idade + ' anos' },
+    { label: 'APOSENTADORIA',    value: 'aos ' + state.aposem + ' anos' },
+    { label: 'APORTE MENSAL',    value: fmtFull(state.aporte) },
+    { label: 'TEMPO DE INVESTIMENTO', value: resultData.anos + ' anos' }
+  ];
+
+  cards.forEach(function(c, i) {
+    const col = i % 2, row = Math.floor(i / 2);
+    const cx = 100 + col * (cardW + 24);
+    const cy = cardY + row * (cardH + 20);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.045)';
+    roundRect(ctx, cx, cy, cardW, cardH, 14);
+    ctx.fill();
+
+    ctx.textAlign = 'left';
+    ctx.font = '700 13px ' + F;
+    ctx.fillStyle = GRAYW2;
+    ctx.fillText(c.label, cx + 22, cy + 40);
+
+    let vSize = 30;
+    ctx.font = '800 ' + vSize + 'px ' + F;
+    while (ctx.measureText(c.value).width > cardW - 44 && vSize > 20) {
+      vSize -= 2;
+      ctx.font = '800 ' + vSize + 'px ' + F;
+    }
+    ctx.fillStyle = OFFW;
+    ctx.fillText(c.value, cx + 22, cy + 86);
+  });
+
+  // ── Elemento discreto de evolução patrimonial ──
+  const chartBaseY = 1078, chartLeft = 100, chartRight = W - 100;
+  const pts = resultData.series;
+  const maxV = Math.max.apply(null, pts) || 1;
+
+  ctx.strokeStyle = 'rgba(198,163,78,0.55)';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  pts.forEach(function(v, i) {
+    const px = chartLeft + (chartRight - chartLeft) * (i / (pts.length - 1));
+    const py = chartBaseY - 70 * (v / maxV);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+
+  // Ponto final em dourado
+  const lastX = chartRight;
+  const lastY = chartBaseY - 70;
+  ctx.fillStyle = GOLD_L;
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(232,205,120,0.3)';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 12, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // ── Rodapé ──
+  ctx.textAlign = 'center';
+  ctx.font = '700 14px ' + F;
+  ctx.fillStyle = GOLD_M;
+  ctx.fillText('SIMULAÇÃO EDUCATIVA', W / 2, 1140);
+
+  ctx.font = '600 22px ' + F;
+  ctx.fillStyle = OFFW;
+  ctx.fillText('Vitor Souza · Assessor XP Investimentos', W / 2, 1184);
+
+  ctx.font = '600 19px ' + F;
+  ctx.fillStyle = GOLD_M;
+  ctx.fillText('@vitorsouzainvest', W / 2, 1216);
+
+  ctx.font = '400 15px ' + F;
+  ctx.fillStyle = GRAYW2;
+  wrapText(ctx,
+    'Resultado baseado nas hipóteses utilizadas nesta simulação. Não representa garantia de rentabilidade ou de renda futura.',
+    W / 2, 1264, W - 220, 21);
+
+  return canvas;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function wrapText(ctx, text, x, y, maxW, lineH) {
+  const words = text.split(' ');
+  let line = '';
+  const lines = [];
+  words.forEach(function(w) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = test;
+    }
+  });
+  lines.push(line);
+  lines.forEach(function(l, i) { ctx.fillText(l, x, y + i * lineH); });
 }
 
 function restart() {
