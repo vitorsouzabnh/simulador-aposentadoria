@@ -1,1565 +1,2719 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador de Aposentadoria · Vitor Souza</title>
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
-<link rel="apple-touch-icon" href="icon-32.png">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Aposentadoria · Vitor Souza</title>
+  
+  <!-- Google Fonts: Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
+  
+  <!-- Basecoat CSS & System Shell -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/basecoat.cdn.min.css">
+  <style>
+/* Skip artifact shell — fixed styles served beside every artifact.
+   Complements basecoat; artifacts override --accent for their own identity. */
 :root {
-  --bg:      #FAF8F4;
-  --white:   #FFFFFF;
-  --navy:    #0E1632;
-  --gold:    #B08C30;
-  --gold-m:  #C6A34E;
-  --gold-l:  #E8CD78;
-  --gray:    #767684;
-  --gray-l:  #D2CFC8;
-  --cream:   #F0EBD8;
-  --red:     #C0392B;
-  --green:   #1A7A4A;
+  color-scheme: light dark;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --accent-text: color-mix(in srgb, var(--accent) 72%, #000);
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --text: #14171f;
+  --text-muted: #5b6472;
+  --border: rgba(20, 23, 31, 0.10);
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(20, 23, 31, 0.08);
+  --space: 16px;
 }
-
+/* Theme resolution. Without data-theme the viewer's system preference decides,
+   as it always did. With it, the artifact's own choice wins in BOTH directions:
+   a page that hardcodes one palette must not be handed the opposite set of
+   tokens by the machine it happens to be opened on. The dark values appear
+   twice because a media query cannot be folded into a selector list.
+   The attribute sits inside :where() so these blocks keep the specificity of a
+   bare :root — the page's own <style> is linked after this file and must go on
+   overriding any token it wants, exactly as it could before. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+    --bg: #101318;
+    --surface: #181c23;
+    --text: #eef1f6;
+    --text-muted: #9aa4b2;
+    --border: rgba(238, 241, 246, 0.12);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+:root:where([data-theme="dark"]) {
+  color-scheme: dark;
+  --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+  --bg: #101318;
+  --surface: #181c23;
+  --text: #eef1f6;
+  --text-muted: #9aa4b2;
+  --border: rgba(238, 241, 246, 0.12);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+:root:where([data-theme="light"]) { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
 body {
-  font-family: 'Montserrat', sans-serif;
   background: var(--bg);
-  color: var(--navy);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 16px 60px;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+
+.shell-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.shell-section { padding: calc(var(--space) * 2) 0; }
+.shell-grid { display: grid; gap: var(--space); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.shell-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: var(--space); }
+.shell-footer { padding: 24px 0 40px; color: var(--text-muted); font-size: 13px; }
+
+.shell-hero { padding: calc(var(--space) * 3) 0 calc(var(--space) * 2); }
+.shell-hero h1 { font-size: clamp(26px, 4vw, 40px); line-height: 1.15; margin: 0 0 10px; text-wrap: balance; }
+.shell-hero p { color: var(--text-muted); max-width: 60ch; margin: 0; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space);
+}
+
+.kpi { display: flex; flex-direction: column; gap: 4px; }
+.kpi .kpi-value { font-size: 28px; font-weight: 650; line-height: 1.1; }
+.kpi .kpi-label { font-size: 13px; color: var(--text-muted); }
+.kpi .kpi-delta { font-size: 12.5px; font-weight: 600; }
+.kpi .kpi-delta.up { color: #0a8f3c; }
+.kpi .kpi-delta.down { color: #cf3131; }
+
+table.shell-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.shell-table th {
+  text-align: left; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600;
+}
+table.shell-table th, table.shell-table td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--border); }
+table.shell-table td.num, table.shell-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+.chart-box { width: 100%; min-height: 220px; }
+.chart-box svg { width: 100%; height: auto; display: block; }
+
+.muted { color: var(--text-muted); }
+.accent { color: var(--accent-text); }
+.shell-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shell-fade { animation: shell-fade 400ms ease both; }
+  @keyframes shell-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
 
-/* ── HEADER ── */
-.header {
-  width: 100%;
-  max-width: 680px;
-  padding: 40px 0 0;
-  text-align: center;
-}
-
-.header-tag {
-  display: inline-block;
-  background: var(--navy);
-  color: var(--gold-m);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  padding: 7px 18px;
-  border-radius: 4px;
-  margin-bottom: 24px;
-}
-
-.header h1 {
-  font-size: clamp(26px, 5vw, 40px);
-  font-weight: 900;
-  line-height: 1.15;
-  color: var(--navy);
-  margin-bottom: 14px;
-}
-
-.header h1 em {
-  font-style: normal;
-  color: var(--gold);
-}
-
-.header p {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--gray);
-  line-height: 1.7;
-  max-width: 480px;
-  margin: 0 auto 40px;
-}
-
-.gold-bar {
-  width: 50px;
-  height: 3px;
-  background: var(--gold);
-  margin: 0 auto 40px;
-}
-
-/* ── CARD ── */
-.card {
-  width: 100%;
-  max-width: 680px;
-  background: var(--white);
-  border-radius: 20px;
-  border: 1px solid var(--gray-l);
-  overflow: hidden;
-  box-shadow: 0 4px 40px rgba(14,22,50,0.07);
-}
-
-/* ── STEPS NAV ── */
-.steps-nav {
-  display: flex;
-  border-bottom: 1px solid var(--gray-l);
-  background: var(--bg);
-}
-
-.step-dot {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--gray-l);
-  transition: all 0.3s;
-  position: relative;
-}
-
-.step-dot.active { color: var(--navy); }
-.step-dot.done   { color: var(--gold); }
-
-.step-dot .dot {
-  width: 26px; height: 26px;
-  border-radius: 50%;
-  background: var(--gray-l);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 800;
-  color: var(--white);
-  flex-shrink: 0;
-  transition: all 0.3s;
-}
-
-.step-dot.active .dot { background: var(--navy); }
-.step-dot.done   .dot { background: var(--gold); }
-
-.step-dot .label { display: none; }
-
-@media (min-width: 480px) {
-  .step-dot .label { display: block; }
-}
-
-/* ── STEP PANELS ── */
-.step-panel {
-  display: none;
-  padding: 40px 40px 36px;
-  animation: fadeIn 0.3s ease;
-}
-
-.step-panel.active { display: block; }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── FORM FIELDS ── */
-.step-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--navy);
-  margin-bottom: 6px;
-}
-
-.step-sub {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--gray);
-  margin-bottom: 32px;
-  line-height: 1.6;
-}
-
-.field {
-  margin-bottom: 28px;
-}
-
-.field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--navy);
-  margin-bottom: 8px;
-  letter-spacing: 0.3px;
-}
-
-.field label span {
-  font-weight: 500;
-  color: var(--gray);
-}
-
-.field input[type="number"],
-.field input[type="text"],
-.field input[type="tel"] {
-  width: 100%;
-  padding: 14px 18px;
-  border: 1.5px solid var(--gray-l);
-  border-radius: 10px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--navy);
-  background: var(--bg);
-  outline: none;
-  transition: border-color 0.2s;
-  -moz-appearance: textfield;
-}
-
-.field input::-webkit-outer-spin-button,
-.field input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-.field input:focus {
-  border-color: var(--gold);
-  background: var(--white);
-}
-
-.field input.error { border-color: var(--red); }
-
-.field .hint {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--gray);
-  font-weight: 500;
-}
-
-.field .err-msg {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--red);
-  font-weight: 600;
-  display: none;
-}
-
-.field .err-msg.show { display: block; }
-
-/* Slider */
-.slider-wrap {
-  position: relative;
-  padding-top: 4px;
-}
-
-.slider-val {
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--navy);
-  margin-bottom: 10px;
-}
-
-.slider-val em {
-  font-style: normal;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--gray);
-  margin-left: 4px;
-}
-
-input[type="range"] {
-  width: 100%;
-  -webkit-appearance: none;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--gray-l);
-  outline: none;
-  cursor: pointer;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  background: var(--navy);
-  border: 3px solid var(--gold);
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(14,22,50,0.2);
-}
-
-input[type="range"]::-moz-range-thumb {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  background: var(--navy);
-  border: 3px solid var(--gold);
-  cursor: pointer;
-}
-
-.slider-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gray);
-}
-
-/* Input with prefix */
-.input-prefix {
-  position: relative;
-}
-
-.input-prefix span {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--gold);
-  pointer-events: none;
-}
-
-.input-prefix input {
-  padding-left: 44px !important;
-}
-
-/* ── BUTTONS ── */
-.btn-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.btn {
-  flex: 1;
-  padding: 16px 24px;
-  border-radius: 10px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s ease;
-}
-
-.btn-primary {
-  background: var(--navy);
-  color: var(--white);
-  box-shadow: 0 2px 12px rgba(14,22,50,0.15);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::after {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  border-radius: 8px;
-  border: 1px solid rgba(198,163,78,0.4);
-  pointer-events: none;
-}
-
-.btn-primary:hover {
-  background: var(--gold);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(176,140,48,0.3);
-}
-
-.btn-ghost {
-  background: transparent;
-  color: var(--gray);
-  border: 1.5px solid var(--gray-l);
-}
-
-.btn-ghost:hover { border-color: var(--gray); color: var(--navy); }
-
-.btn-gold {
-  background: var(--gold);
-  color: var(--navy);
-  font-size: 16px;
-  font-weight: 800;
-  box-shadow: 0 4px 20px rgba(176,140,48,0.35);
-}
-
-.btn-gold:hover {
-  background: var(--gold-l);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(176,140,48,0.45);
-}
-
-/* ── LEAD PANEL ── */
-.lead-intro {
-  background: var(--cream);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 28px;
-  border-left: 4px solid var(--gold);
-}
-
-.lead-intro p {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--navy);
-  line-height: 1.6;
-}
-
-.lead-intro strong { color: var(--gold); }
-
-.privacy-note {
-  margin-top: 16px;
-  font-size: 12px;
-  color: var(--gray);
-  font-weight: 500;
-  text-align: center;
-  line-height: 1.6;
-}
-
-/* ── RESULT PANEL ── */
-.result-header {
-  background: var(--navy);
-  margin: -40px -40px 36px;
-  padding: 36px 40px;
-  position: relative;
-  overflow: hidden;
-}
-
-.result-header::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 4px;
-  background: var(--gold);
-}
-
-.result-tag {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--gold-m);
-  margin-bottom: 16px;
-}
-
-.result-name {
-  font-size: 17px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.7);
-  margin-bottom: 4px;
-}
-
-.result-headline {
-  font-size: clamp(22px, 4vw, 30px);
-  font-weight: 900;
-  color: var(--white);
-  line-height: 1.2;
-}
-
-.result-headline em {
-  font-style: normal;
-  color: var(--gold-l);
-}
-
-/* Metrics */
-.metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.metrics-3 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 28px;
-}
-
-.metric {
-  background: var(--bg);
-  border: 1px solid var(--gray-l);
-  border-radius: 12px;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-.metric::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 3px;
-}
-
-.metric.good::before  { background: var(--gold); }
-.metric.great::before { background: var(--green); }
-
-.metric-label {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--gray);
-  margin-bottom: 8px;
-}
-
-.metric-val {
-  font-size: clamp(20px, 3vw, 28px);
-  font-weight: 900;
-  color: var(--navy);
-  line-height: 1;
-}
-
-.metrics-3 .metric-val {
-  font-size: clamp(15px, 2.2vw, 19px);
-  line-height: 1.15;
-}
-
-.metric-val em {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gray);
-  font-style: normal;
-  margin-left: 2px;
-}
-
-.metrics-3 .metric-val em { font-size: 12px; }
-
-.metric-sub {
-  margin-top: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gray);
-}
-
-/* Chart block */
-.chart-block {
-  background: var(--bg);
-  border: 1px solid var(--gray-l);
-  border-radius: 14px;
-  padding: 24px 20px 18px;
-  margin-bottom: 28px;
-}
-
-.chart-title {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 14px;
-}
-
-.chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--navy);
-}
-
-.legend-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.chart-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-/* Composition bar */
-.comp-bar {
-  display: flex;
-  height: 38px;
-  border-radius: 9px;
-  overflow: hidden;
-  margin: 16px 0 14px;
-  background: var(--gray-l);
-}
-
-.comp-seg {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--white);
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.seg-inicial { background: var(--navy); }
-.seg-aportes { background: var(--gold); }
-.seg-cresc   { background: var(--green); }
-.seg-poup    { background: var(--red); }
-
-.comp-legend-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--gray-l);
-}
-
-.comp-legend-row:last-child { border-bottom: none; padding-bottom: 0; }
-
-.comp-legend-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--navy);
-}
-
-.comp-legend-val {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--navy);
-  text-align: right;
-}
-
-.comp-legend-val em {
-  font-style: normal;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--gray);
-}
-
-/* Comparison */
-.comparison {
-  background: var(--cream);
-  border-radius: 14px;
-  padding: 24px;
-  margin-bottom: 28px;
-}
-
-.comparison-title {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 18px;
-}
-
-.comp-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--gray-l);
-}
-
-.comp-row:last-child { border-bottom: none; padding-bottom: 0; }
-
-.comp-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--navy);
-  flex: 1;
-}
-
-.comp-label span {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--gray);
-  margin-top: 2px;
-}
-
-.comp-val {
-  font-size: 18px;
-  font-weight: 900;
-  text-align: right;
-}
-
-.comp-val.low  { color: var(--red); }
-.comp-val.high { color: var(--green); }
-
-.comp-diff {
-  background: var(--navy);
-  border-radius: 8px;
-  padding: 14px 18px;
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.comp-diff span {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.7);
-}
-
-.comp-diff strong {
-  font-size: 18px;
-  font-weight: 900;
-  color: var(--gold-l);
-}
-
-/* CTA result */
-.result-cta {
-  background: var(--navy);
-  border-radius: 14px;
-  padding: 28px;
-  text-align: center;
-}
-
-.result-cta p {
-  font-size: 15px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.75);
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-
-.result-cta p strong { color: var(--gold-m); }
-
-.wa-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: var(--gold);
-  color: var(--navy);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  padding: 18px 32px;
-  border-radius: 10px;
-  text-decoration: none;
-  width: 100%;
-  transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(176,140,48,0.35);
-}
-
-.wa-btn:hover {
-  background: var(--gold-l);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(176,140,48,0.45);
-}
-
-.wa-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
-
-.dl-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  margin-top: 12px;
-  padding: 16px 24px;
-  border-radius: 10px;
-  border: 1.5px solid rgba(255,255,255,0.28);
-  background: transparent;
-  color: var(--white);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.dl-btn:hover { border-color: var(--gold-m); color: var(--gold-l); }
-
-.dl-btn:disabled { opacity: 0.55; cursor: wait; }
-
-.restart-btn {
-  display: block;
-  margin: 16px auto 0;
-  background: none;
-  border: none;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gray);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.restart-btn:hover { color: var(--navy); }
-
-/* ── FOOTER ── */
-.footer {
-  margin-top: 32px;
-  text-align: center;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--gray);
-  line-height: 1.7;
-}
-
-.footer strong { color: var(--gold); font-weight: 700; }
-
-@media (max-width: 520px) {
-  .step-panel { padding: 28px 24px; }
-  .result-header { margin: -28px -24px 28px; padding: 28px 24px; }
-  .metrics { grid-template-columns: 1fr; }
-  .metrics-3 { grid-template-columns: 1fr; }
-}
 </style>
+  
+
+  <style>
+    :root {
+      --navy: #101426;
+      --navy-light: #1A213D;
+      --gold: #B08C30;
+      --gold-deep: #8A6D20;
+      --gold-hover: #967425;
+      --gold-soft: #F6EEDC;
+      --gold-mid: #C6A34E;
+      --gold-light: #E8CD78;
+      --cream-bg: #FAF8F4;
+      --cream-card: #F4F1EA;
+      --surface-card: #FFFFFF;
+      --green-ref: #15803D;
+      --green-light: #DCFCE7;
+      --line: #E3DFD3;
+      --line-soft: #E8E4DA;
+      --border-color: var(--line);
+      --border-hover: #C9C4B4;
+      --placeholder-color: #A9A49A;
+      --text-main: #101426;
+      --text-muted: #6B6B7A;
+      --text-sub: #5C5C6E;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-card: 24px;
+      --accent: var(--gold);
+      --accent-contrast: #FFFFFF;
+      --accent-text: var(--gold-deep);
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--cream-bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 24px 16px 48px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .app-wrapper {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Page Header */
+    .advisor-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .advisor-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      background: rgba(16, 20, 38, 0.06);
+      padding: 5px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.3px;
+    }
+
+    .advisor-pill .xp-tag {
+      color: var(--gold);
+      font-weight: 800;
+    }
+
+    .free-tag {
+      display: inline-flex;
+      align-items: center;
+      background: #FEF3C7;
+      color: #92400E;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: clamp(24px, 4vw, 32px);
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.25;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Card Container */
+    .simulator-card {
+      background: var(--surface-card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      box-shadow: 0 6px 48px rgba(16, 20, 38, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Step Indicator */
+    .steps-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px;
+      background: var(--cream-card);
+      border-bottom: 1px solid var(--line);
+      gap: 8px;
+    }
+
+    .step-item, .step-dot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      position: relative;
+      padding-bottom: 4px;
+    }
+
+    .step-item.active::after,
+    .step-dot.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 25%;
+      right: 25%;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 999px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--line);
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .step-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: color 0.2s ease;
+    }
+
+    .step-item.active .step-num, .step-dot.active .step-num {
+      background: var(--navy);
+      color: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(16, 20, 38, 0.15);
+    }
+
+    .step-item.active .step-label, .step-dot.active .step-label {
+      color: var(--navy);
+      font-weight: 700;
+    }
+
+    .step-item.completed .step-num, .step-dot.completed .step-num {
+      background: var(--gold);
+      color: #FFFFFF;
+    }
+
+    .step-item.completed .step-label, .step-dot.completed .step-label {
+      color: var(--navy);
+    }
+
+    @media (max-width: 580px) {
+      .steps-nav {
+        padding: 14px 16px;
+      }
+      .step-label {
+        display: none;
+      }
+      .step-item {
+        justify-content: center;
+      }
+    }
+
+    /* Step Contents */
+    .step-content {
+      display: none;
+      padding: 44px 44px 38px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .step-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 580px) {
+      .step-content {
+        padding: 30px 24px;
+      }
+    }
+
+    .step-heading, .step-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0 0 8px 0;
+      letter-spacing: -0.3px;
+    }
+
+    .step-desc, .step-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin: 0 0 32px 0;
+    }
+
+    /* ETAPA 1: Sliders em Cards */
+    .slider-card {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 26px 28px 22px;
+      margin-bottom: 18px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .slider-card:focus-within {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 4px rgba(176, 140, 48, 0.10);
+    }
+
+    .slider-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .slider-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .field-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .slider-val {
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .slider-val span {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    /* Range Sliders */
+    .range-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--line);
+      outline: none;
+      margin: 12px 0 6px 0;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--navy);
+      border: 3px solid var(--gold);
+      box-shadow: 0 2px 8px rgba(16, 20, 38, 0.25);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+
+    .range-input::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      background: var(--gold);
+      border-color: #FFFFFF;
+    }
+
+    .range-input::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--navy);
+      border: 3px solid var(--gold);
+      box-shadow: 0 2px 8px rgba(16, 20, 38, 0.25);
+      cursor: pointer;
+    }
+
+    .range-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Time to invest hint */
+    .invest-horizon-banner {
+      border-top: 1px dashed var(--line-soft);
+      padding-top: 18px;
+      margin-top: 22px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .horizon-badge {
+      display: none;
+    }
+
+    .slider-hint, .horizon-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold-deep);
+      letter-spacing: 0.2px;
+    }
+
+    /* ETAPA 2: Inputs com Grupo Flexbox à Prova Definitiva de Sobreposição */
+    .field, .input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      margin-bottom: 24px;
+      position: static;
+    }
+
+    /* Labels sem position */
+    .field > label, .input-group > label,
+    .field > .input-label, .input-group > .input-label {
+      order: 1;
+      display: block;
+      white-space: normal;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.5;
+      margin-bottom: 8px;
+      position: static;
+    }
+
+    .field label span, .input-label span, .field-desc span {
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    /* 1. Container .input-prefix: grupo flexbox sem nenhum posicionamento absoluto */
+    .input-prefix,
+    .currency-input-wrap {
+      order: 2;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid #E3DFD3;
+      border-radius: 12px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+      position: static;
+    }
+
+    .input-prefix:hover,
+    .currency-input-wrap:hover {
+      border-color: #C9C4B4;
+    }
+
+    .input-prefix:focus-within,
+    .currency-input-wrap:focus-within {
+      border-color: #B08C30;
+      box-shadow: 0 0 0 4px rgba(176, 140, 48, 0.10);
+    }
+
+    .input-prefix.error,
+    .currency-input-wrap.error {
+      border-color: #C0392B !important;
+      box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.08) !important;
+    }
+
+    /* 2. Prefixo .input-prefix span: elemento em fluxo dentro do flex */
+    .input-prefix span,
+    .currency-input-wrap span.input-prefix-label {
+      display: inline-block;
+      position: static;
+      transform: none;
+      flex-shrink: 0;
+      padding-left: 20px;
+      padding-right: 6px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #8A6D20;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* 3. Input dentro de .input-prefix: valor começa APÓS o "R$" */
+    .input-prefix input,
+    .input-prefix input[type="text"],
+    .input-prefix input[type="number"],
+    .currency-input-wrap input {
+      flex: 1;
+      min-width: 0;
+      display: block;
+      padding: 16px 20px 16px 4px !important;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: #101426;
+      outline: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      appearance: none;
+      margin: 0;
+      position: static;
+    }
+
+    .input-prefix input::-webkit-outer-spin-button,
+    .input-prefix input::-webkit-inner-spin-button,
+    .currency-input-wrap input::-webkit-outer-spin-button,
+    .currency-input-wrap input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .input-prefix input::placeholder,
+    .currency-input-wrap input::placeholder {
+      color: #A9A49A;
+      opacity: 1;
+    }
+
+    /* 6. Campos simples (sem prefixo: nome / WhatsApp) */
+    .styled-input.no-prefix,
+    .field input.no-prefix,
+    .input-group input.no-prefix {
+      order: 2;
+      display: block;
+      width: 100%;
+      padding: 16px 20px;
+      border: 1.5px solid #E3DFD3;
+      border-radius: 12px;
+      background-color: #FFFFFF;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: #101426;
+      outline: none;
+      box-sizing: border-box;
+      position: static;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .styled-input.no-prefix::placeholder,
+    .field input.no-prefix::placeholder,
+    .input-group input.no-prefix::placeholder {
+      color: #A9A49A;
+      opacity: 1;
+    }
+
+    .styled-input.no-prefix:hover,
+    .field input.no-prefix:hover,
+    .input-group input.no-prefix:hover {
+      border-color: #C9C4B4;
+    }
+
+    .styled-input.no-prefix:focus,
+    .field input.no-prefix:focus,
+    .input-group input.no-prefix:focus {
+      outline: none;
+      background-color: #FFFFFF;
+      border-color: #B08C30;
+      box-shadow: 0 0 0 4px rgba(176, 140, 48, 0.10);
+    }
+
+    .styled-input.no-prefix.error,
+    .field input.no-prefix.error,
+    .input-group input.no-prefix.error {
+      border-color: #C0392B !important;
+      background-color: #FFFFFF !important;
+      box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.08) !important;
+    }
+
+    /* 5. Helper .hint e erro .err-msg: em fluxo abaixo do campo */
+    .field > .hint, .input-group > .hint,
+    .field > .input-hint-small, .input-group > .input-hint-small {
+      order: 3;
+    }
+
+    .field > .err-msg, .input-group > .err-msg,
+    .field > .input-error-msg, .input-group > .input-error-msg {
+      order: 4;
+    }
+
+    .field .hint, .field .err-msg,
+    .input-group .hint, .input-group .err-msg,
+    .input-hint-small, .input-error-msg {
+      display: flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      line-height: 1.5;
+      width: 100%;
+      box-sizing: border-box;
+      position: static;
+    }
+
+    .field .hint, .input-group .hint, .input-hint-small {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .field .err-msg, .input-group .err-msg, .input-error-msg {
+      display: none;
+      color: #C0392B;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .field .err-msg.show, .field .err-msg.visible,
+    .input-group .err-msg.show, .input-group .err-msg.visible,
+    .input-error-msg.show, .input-error-msg.visible {
+      display: flex;
+    }
+
+    .field .hint span, .field .err-msg span,
+    .input-group .hint span, .input-group .err-msg span,
+    .input-hint-small span, .input-error-msg span {
+      flex: 1 1 auto;
+      min-width: 0;
+      word-break: break-word;
+      color: inherit;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .field .hint svg, .field .err-msg svg,
+    .input-group .hint svg, .input-group .err-msg svg,
+    .hint-icon, .err-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .hint-icon {
+      color: var(--text-sub);
+    }
+
+    .err-icon {
+      color: #C0392B;
+    }
+
+    /* Step 3 Highlight Box */
+    .advisor-callout-box, .lead-intro {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .advisor-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(16, 20, 38, 0.15);
+    }
+
+    .advisor-callout-text {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--navy);
+      font-weight: 500;
+    }
+
+    .advisor-callout-text strong, .lead-intro strong {
+      color: var(--gold-deep);
+      font-weight: 700;
+    }
+
+    .privacy-notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    /* Button Actions */
+    .btn-row, .actions-row {
+      display: flex;
+      flex-direction: row;
+      gap: 14px;
+      margin-top: 32px;
+      width: 100%;
+    }
+
+    .btn, .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 52px;
+      padding: 0 24px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      box-sizing: border-box;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .btn-primary-navy {
+      background: var(--navy);
+      color: #FFFFFF;
+      flex: 1;
+      box-shadow: 0 4px 14px rgba(16, 20, 38, 0.16);
+    }
+
+    .btn-primary-navy:hover {
+      background: var(--gold);
+      color: var(--navy);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(176, 140, 48, 0.28);
+    }
+
+    .btn-primary-gold {
+      background: var(--gold);
+      color: #FFFFFF;
+      flex: 1;
+    }
+
+    .btn-primary-gold:hover {
+      background: var(--gold-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(176, 140, 48, 0.3);
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--navy);
+      border: 1.5px solid var(--navy);
+      padding: 0 20px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(16, 20, 38, 0.06);
+      border-color: var(--navy);
+    }
+
+    /* STEP 4: RESULT STYLING */
+    .result-navy-banner {
+      background: var(--navy);
+      color: #FFFFFF;
+      margin: -44px -44px 30px -44px;
+      padding: 34px 44px;
+      position: relative;
+    }
+
+    @media (max-width: 580px) {
+      .result-navy-banner {
+        margin: -30px -24px 24px -24px;
+        padding: 28px 24px;
+      }
+    }
+
+    .result-badge {
+      display: inline-block;
+      background: rgba(176, 140, 48, 0.25);
+      border: 1px solid rgba(176, 140, 48, 0.5);
+      color: #F8D988;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .result-greeting {
+      font-size: 14px;
+      color: #C2CADB;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .result-headline {
+      font-size: clamp(18px, 3.2vw, 24px);
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .result-headline .highlight-gold {
+      color: #E2B755;
+    }
+
+    /* Result KPI Cards */
+    .result-main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-main-card, .metric {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      padding: 20px 18px;
+      text-align: center;
+    }
+
+    .kpi-main-card.gold-border {
+      border-color: rgba(176, 140, 48, 0.5);
+      background: #FAF6EE;
+    }
+
+    .kpi-main-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi-main-val {
+      font-size: clamp(20px, 3.6vw, 26px);
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .kpi-main-sub {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold-deep);
+    }
+
+    /* Three smaller cards */
+    .result-triplet-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-mini-card, .metric-mini {
+      background: #FFFFFF;
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+
+    .kpi-mini-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-mini-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    @media (max-width: 520px) {
+      .btn-row, .actions-row {
+        flex-wrap: wrap;
+      }
+      .btn, .btn-action {
+        flex: 1 1 100%;
+        width: 100%;
+      }
+      .result-main-grid {
+        grid-template-columns: 1fr;
+      }
+      .result-triplet-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Chart Card */
+    .chart-section {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .section-title, .comparison-title {
+      color: var(--gold-deep);
+      font-weight: 700;
+    }
+
+    .section-title-sm {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0 0 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .chart-svg-wrap {
+      width: 100%;
+      height: 220px;
+      position: relative;
+    }
+
+    .chart-svg-wrap svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Segmented Bar (Composition) */
+    .composition-section, .composition {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      margin-bottom: 22px;
+    }
+
+    .seg-bar-track {
+      height: 20px;
+      border-radius: 10px;
+      background: var(--line-soft);
+      display: flex;
+      overflow: hidden;
+      margin: 12px 0 14px 0;
+    }
+
+    .seg-bar-fill {
+      height: 100%;
+      transition: width 0.5s ease-out;
+    }
+
+    .seg-navy { background: var(--navy); }
+    .seg-gold { background: var(--gold); }
+    .seg-green { background: var(--green-ref); }
+
+    .composition-legend-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .comp-col {
+      font-size: 11px;
+    }
+
+    .comp-title {
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 2px;
+    }
+
+    .comp-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    @media (max-width: 520px) {
+      .composition-legend-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    /* Strategy Comparison Table / Box */
+    .strategy-compare-box, .comparison {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .strat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #FFFFFF;
+      font-size: 13px;
+    }
+
+    .strat-row:last-child {
+      border-bottom: none;
+    }
+
+    .strat-row.highlight-ref {
+      background: #F0FDF4;
+    }
+
+    .strat-name {
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .strat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 1px;
+    }
+
+    .strat-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .strat-diff-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #DCFCE7;
+      color: #166534;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    /* Final CTA */
+    .final-cta-card {
+      background: linear-gradient(135deg, #101426 0%, #1A213D 100%);
+      border-radius: var(--radius-md);
+      padding: 24px 22px;
+      text-align: center;
+      color: #FFFFFF;
+    }
+
+    .disclaimer-lead {
+      font-size: 12px;
+      color: #CAD5E8;
+      line-height: 1.55;
+      margin: 0 0 14px 0;
+    }
+
+    .cta-hook {
+      font-size: 15px;
+      font-weight: 700;
+      color: #E2B755;
+      line-height: 1.4;
+      margin: 0 0 18px 0;
+    }
+
+    .cta-btn-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: var(--gold);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(176, 140, 48, 0.4);
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .cta-btn-whatsapp:hover {
+      background: var(--gold-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-download-img {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      background: transparent;
+      color: #F8D988;
+      border: 1.5px solid rgba(226, 183, 85, 0.45);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      margin-top: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .btn-download-img:hover {
+      background: rgba(226, 183, 85, 0.12);
+      border-color: #E2B755;
+      color: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    .btn-download-img:active {
+      transform: translateY(0);
+    }
+
+    .btn-redo {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      margin-top: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-redo:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Footer */
+    .app-footer, footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 580px;
+    }
+
+    .app-footer strong, footer strong, .advisor-meta strong {
+      color: var(--gold-deep);
+      font-weight: 700;
+    }
+
+    .advisor-meta {
+      font-weight: 600;
+      color: var(--navy);
+      margin-top: 6px;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: #FFFFFF;
+        padding: 0;
+      }
+      .steps-nav, .actions-row, .btn-redo, .cta-btn-whatsapp {
+        display: none !important;
+      }
+      .simulator-card {
+        border: none;
+        box-shadow: none;
+      }
+      .step-content {
+        display: none;
+      }
+      #step4 {
+        display: block !important;
+      }
+    }
+
+    /* ============================================================
+       FIX DE SOBREPOSIÇÃO — neutraliza conflitos com o Basecoat CSS
+       (o Basecoat define .input-group { height:36px; border; shadow;
+       position:relative; align-items:center }, o que espreme o wrapper
+       do campo e faz label/hint/erro transbordarem sobre inputs e botões)
+       ============================================================ */
+    .input-group.field,
+    .field.input-group {
+      height: auto !important;
+      min-height: 0 !important;
+      position: static !important;
+      align-items: stretch !important;
+      flex-direction: column !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      margin: 0 0 24px 0 !important;
+      padding: 0 !important;
+      gap: 0 !important;
+    }
+
+    /* Ordem visual garantida dentro de cada grupo: label → campo → hint → erro */
+    .input-group.field > label,
+    .field.input-group > label {
+      order: 1 !important;
+      width: 100% !important;
+      display: block !important;
+      margin: 0 0 8px 0 !important;
+      line-height: 1.5 !important;
+      white-space: normal !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+
+    .input-group.field > .input-prefix,
+    .input-group.field > .currency-input-wrap,
+    .input-group.field > input.styled-input {
+      order: 2 !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 58px !important;
+      flex: none !important;
+    }
+
+    .input-group.field > .hint,
+    .input-group.field > .input-hint-small {
+      order: 3 !important;
+    }
+
+    .input-group.field > .err-msg,
+    .input-group.field > .input-error-msg {
+      order: 4 !important;
+    }
+
+    .input-group.field > .hint,
+    .input-group.field > .err-msg {
+      height: auto !important;
+      margin-top: 8px !important;
+      overflow: visible !important;
+    }
+
+    /* Inputs simples (nome/WhatsApp): altura própria, sem herdar regra do Basecoat */
+    .field input.no-prefix,
+    .input-group input.no-prefix {
+      height: auto !important;
+      min-height: 58px !important;
+    }
+
+    /* Etapa 3: label sempre integralmente acima do input */
+    .step-content .input-group.field .input-label {
+      position: static !important;
+      transform: none !important;
+    }
+
+    /* Banner navy: nunca sobrepõe a barra de passos nem o conteúdo vizinho */
+    .result-navy-banner {
+      position: relative;
+      z-index: 0;
+    }
+    .steps-nav {
+      position: relative;
+      z-index: 2;
+      background: var(--cream-card);
+    }
+
+    /* Gráfico: legenda quebra linha sem colidir com o título */
+    .section-title-sm {
+      flex-wrap: wrap;
+    }
+    .chart-legend {
+      flex-wrap: wrap;
+      row-gap: 4px;
+    }
+
+    /* Comparativo: valores longos nunca cortam em telas estreitas */
+    .strat-row {
+      gap: 12px;
+    }
+    .strat-val {
+      text-align: right;
+      white-space: normal;
+      word-break: break-word;
+    }
+  </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-tag">Ferramenta gratuita</div>
-  <h1>Quanto você terá<br>na <em>aposentadoria?</em></h1>
-  <p>Descubra em 2 minutos o impacto da rentabilidade nos seus investimentos.</p>
-  <div class="gold-bar"></div>
-</div>
-
-<div class="card">
-
-  <!-- Steps nav -->
-  <div class="steps-nav">
-    <div class="step-dot active" id="nav-1">
-      <div class="dot">1</div>
-      <span class="label">Seu perfil</span>
-    </div>
-    <div class="step-dot" id="nav-2">
-      <div class="dot">2</div>
-      <span class="label">Investimentos</span>
-    </div>
-    <div class="step-dot" id="nav-3">
-      <div class="dot">3</div>
-      <span class="label">Seus dados</span>
-    </div>
-    <div class="step-dot" id="nav-4">
-      <div class="dot">4</div>
-      <span class="label">Resultado</span>
-    </div>
-  </div>
-
-  <!-- STEP 1 — Perfil -->
-  <div class="step-panel active" id="step-1">
-    <p class="step-title">Sobre você</p>
-    <p class="step-sub">Vamos calcular quantos anos você tem para construir patrimônio.</p>
-
-    <div class="field">
-      <label>Sua idade atual</label>
-      <div class="slider-wrap">
-        <div class="slider-val" id="val-idade">35 <em>anos</em></div>
-        <input type="range" id="slider-idade" min="20" max="65" value="35">
-        <div class="slider-labels"><span>20</span><span>65</span></div>
+  <div class="app-wrapper">
+    <!-- Top badge row -->
+    <div class="advisor-badge-row">
+      <div class="advisor-pill">
+        <span>Vitor Souza</span>
+        <span>•</span>
+        <span class="xp-tag">InvestSmart | XP</span>
       </div>
+      <span class="free-tag">Ferramenta gratuita</span>
     </div>
 
-    <div class="field">
-      <label>Quer se aposentar com</label>
-      <div class="slider-wrap">
-        <div class="slider-val" id="val-apos">60 <em>anos</em></div>
-        <input type="range" id="slider-apos" min="45" max="75" value="60">
-        <div class="slider-labels"><span>45</span><span>75</span></div>
-      </div>
-      <div class="hint" id="anos-hint">→ 25 anos para investir</div>
-    </div>
+    <!-- Page Header -->
+    <header class="page-header">
+      <h1 class="page-title">Quanto você terá na aposentadoria?</h1>
+      <p class="page-subtitle">Faça sua simulação personalizada e descubra sua renda estimada futura</p>
+    </header>
 
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="goTo(2)">Continuar →</button>
-    </div>
-  </div>
-
-  <!-- STEP 2 — Investimentos -->
-  <div class="step-panel" id="step-2">
-    <p class="step-title">Sua situação atual</p>
-    <p class="step-sub">Quanto você já tem investido e quanto consegue colocar todo mês.</p>
-
-    <div class="field">
-      <label>Patrimônio investido hoje <span>(pode ser R$ 0)</span></label>
-      <div class="input-prefix">
-        <span>R$</span>
-        <input type="number" id="inp-patrimonio" placeholder="0" min="0" max="10000000">
-      </div>
-      <div class="err-msg" id="err-patrimonio">Informe um valor entre R$ 0 e R$ 10.000.000</div>
-    </div>
-
-    <div class="field">
-      <label>Aporte mensal <span>(quanto vai investir por mês)</span></label>
-      <div class="input-prefix">
-        <span>R$</span>
-        <input type="number" id="inp-aporte" placeholder="500" min="50" max="1000000">
-      </div>
-      <div class="err-msg" id="err-aporte">Informe um valor entre R$ 50 e R$ 1.000.000</div>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-ghost" onclick="goTo(1)">← Voltar</button>
-      <button class="btn btn-primary" onclick="validateStep2()">Continuar →</button>
-    </div>
-  </div>
-
-  <!-- STEP 3 — Lead capture -->
-  <div class="step-panel" id="step-3">
-    <p class="step-title">Quase lá.</p>
-    <p class="step-sub">Seu resultado está pronto. Informe seus dados para acessar.</p>
-
-    <div class="lead-intro">
-      <p>Vitor vai analisar sua simulação e pode entrar em contato para conversar sobre alternativas para o seu caso — sem compromisso.</p>
-    </div>
-
-    <div class="field">
-      <label>Seu nome</label>
-      <input type="text" id="inp-nome" placeholder="Como prefere ser chamado">
-      <div class="err-msg" id="err-nome">Informe seu nome</div>
-    </div>
-
-    <div class="field">
-      <label>WhatsApp <span>(com DDD)</span></label>
-      <input type="tel" id="inp-wpp" placeholder="(11) 99999-9999" maxlength="15">
-      <div class="err-msg" id="err-wpp">Informe um WhatsApp válido</div>
-    </div>
-
-    <div class="btn-row">
-      <button class="btn btn-ghost" onclick="goTo(2)">← Voltar</button>
-      <button class="btn btn-gold" onclick="validateStep3()">Ver meu resultado →</button>
-    </div>
-
-    <p class="privacy-note">🔒 Seus dados são usados apenas para contato. Não há spam.</p>
-  </div>
-
-  <!-- STEP 4 — Result -->
-  <div class="step-panel" id="step-4">
-    <div class="result-header">
-      <p class="result-tag">Sua simulação</p>
-      <p class="result-name" id="res-saudacao"></p>
-      <p class="result-headline" id="res-headline"></p>
-    </div>
-
-    <div class="metrics">
-      <div class="metric good">
-        <p class="metric-label">Patrimônio final</p>
-        <p class="metric-val" id="res-patrimonio-final"></p>
-        <p class="metric-sub" id="res-anos-label"></p>
-      </div>
-      <div class="metric great">
-        <p class="metric-label">Renda mensal de referência</p>
-        <p class="metric-val" id="res-renda"></p>
-        <p class="metric-sub">considerando 0,5% a.m.</p>
-      </div>
-    </div>
-
-    <div class="metrics-3">
-      <div class="metric good">
-        <p class="metric-label">Tempo até aposentar</p>
-        <p class="metric-val" id="res-tempo"></p>
-        <p class="metric-sub" id="res-tempo-sub"></p>
-      </div>
-      <div class="metric good">
-        <p class="metric-label">Total aportado</p>
-        <p class="metric-val" id="res-aportado"></p>
-        <p class="metric-sub" id="res-aportado-sub"></p>
-      </div>
-      <div class="metric great">
-        <p class="metric-label">Crescimento estimado</p>
-        <p class="metric-val" id="res-crescimento"></p>
-        <p class="metric-sub">juros no período</p>
-      </div>
-    </div>
-
-    <div class="chart-block">
-      <p class="chart-title">Evolução do patrimônio</p>
-      <div class="chart-legend">
-        <div class="legend-item"><span class="legend-dot seg-cresc"></span>Cenário de referência</div>
-        <div class="legend-item"><span class="legend-dot seg-poup"></span>Poupança</div>
-      </div>
-      <div id="chart-evolucao"></div>
-    </div>
-
-    <div class="chart-block">
-      <p class="chart-title">Composição do patrimônio final</p>
-      <div class="comp-bar" id="comp-bar"></div>
-      <div id="comp-legend"></div>
-    </div>
-
-    <div class="comparison">
-      <p class="comparison-title">Comparativo de cenários</p>
-      <div class="comp-row">
-        <div class="comp-label">
-          Poupança
-          <span>Hipótese de 6% a.a.</span>
+    <!-- Main Simulator Card -->
+    <main class="simulator-card" id="simCard">
+      
+      <!-- Progress Bar Nav (4 Steps) -->
+      <nav class="steps-nav" aria-label="Progresso da simulação">
+        <div class="step-item active" id="stepIndicator1">
+          <span class="step-num">1</span>
+          <span class="step-label">Seu perfil</span>
         </div>
-        <div class="comp-val low" id="res-poup"></div>
-      </div>
-      <div class="comp-row">
-        <div class="comp-label">
-          Cenário de referência
-          <span>Hipótese de 11% a.a.</span>
+        <div class="step-item" id="stepIndicator2">
+          <span class="step-num">2</span>
+          <span class="step-label">Investimentos</span>
         </div>
-        <div class="comp-val high" id="res-div"></div>
-      </div>
-      <div class="comp-diff">
-        <span>Diferença entre os cenários</span>
-        <strong id="res-diff"></strong>
-      </div>
-    </div>
+        <div class="step-item" id="stepIndicator3">
+          <span class="step-num">3</span>
+          <span class="step-label">Seus dados</span>
+        </div>
+        <div class="step-item" id="stepIndicator4">
+          <span class="step-num">4</span>
+          <span class="step-label">Resultado</span>
+        </div>
+      </nav>
 
-    <div class="result-cta">
-      <p>Esta é uma projeção hipotética, baseada em hipóteses de rentabilidade. O resultado real depende das decisões, das condições de mercado e da estratégia escolhida para o seu perfil. Vitor pode analisar o seu caso — sem compromisso.</p>
-      <a class="wa-btn" id="wa-link" href="#" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.122 1.523 5.86L.057 23.999l6.305-1.654A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.003-1.366l-.36-.213-3.72.976.994-3.634-.234-.373A9.818 9.818 0 1112 21.818z"/></svg>
-        Falar com Vitor sobre meu planejamento
-      </a>
-      <button class="dl-btn" id="dl-btn" onclick="downloadResultImage()">
-        ↓ Baixar minha simulação
-      </button>
-      <button class="restart-btn" onclick="restart()">Refazer simulação</button>
-    </div>
+      <!-- ETAPA 1: PERFIL -->
+      <section class="step-content active" id="step1" aria-labelledby="step1Title">
+        <h2 class="step-heading step-title" id="step1Title">Seu Perfil e Horizonte de Tempo</h2>
+        <p class="step-desc step-sub">Ajuste as idades para definir por quanto tempo seus investimentos vão render.</p>
+
+        <!-- Slider A: Idade Atual -->
+        <div class="slider-card">
+          <div class="slider-card-top">
+            <div>
+              <label for="currentAgeInput" class="slider-label">Sua idade atual</label>
+              <div class="field-desc">Momento de início do planejamento</div>
+            </div>
+            <div class="slider-val" id="currentAgeDisplay">35 <span>anos</span></div>
+          </div>
+          <input type="range" class="range-input" id="currentAgeInput" min="20" max="65" value="35" aria-label="Sua idade atual">
+          <div class="range-ticks">
+            <span>20 anos</span>
+            <span>40 anos</span>
+            <span>65 anos</span>
+          </div>
+        </div>
+
+        <!-- Slider B: Idade Aposentadoria -->
+        <div class="slider-card">
+          <div class="slider-card-top">
+            <div>
+              <label for="retireAgeInput" class="slider-label">Quer se aposentar com</label>
+              <div class="field-desc">Idade pretendida para usufruir a renda</div>
+            </div>
+            <div class="slider-val" id="retireAgeDisplay">60 <span>anos</span></div>
+          </div>
+          <input type="range" class="range-input" id="retireAgeInput" min="45" max="75" value="60" aria-label="Idade de aposentadoria pretendida">
+          <div class="range-ticks">
+            <span>45 anos</span>
+            <span>60 anos</span>
+            <span>75 anos</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Horizon Banner / Hint -->
+        <div class="invest-horizon-banner">
+          <span class="horizon-badge" id="horizonBadge">25 anos</span>
+          <span class="horizon-text slider-hint" id="horizonText">→ 25 anos para investir</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-row">
+          <button type="button" class="btn-action btn-primary-navy" id="btnGoStep2">
+            Continuar →
+          </button>
+        </div>
+      </section>
+
+      <!-- ETAPA 2: INVESTIMENTOS -->
+      <section class="step-content" id="step2" aria-labelledby="step2Title">
+        <h2 class="step-heading step-title" id="step2Title">Seus Aportes e Patrimônio</h2>
+        <p class="step-desc step-sub">Informe quanto você já possui hoje e quanto pode guardar todo mês.</p>
+
+        <!-- Input A: Patrimônio Hoje -->
+        <div class="input-group field">
+          <label for="initialPortfolioInput" class="input-label">Patrimônio investido hoje <span>(pode ser R$ 0)</span></label>
+          <div class="input-prefix currency-input-wrap">
+            <span class="input-prefix-label">R$</span>
+            <input type="text" inputmode="numeric" class="styled-input" id="initialPortfolioInput" placeholder="0" value="0">
+          </div>
+          <div class="input-error-msg err-msg" id="errorInitial">
+            <svg class="err-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>Patrimônio inválido. Insira um valor entre R$ 0 e R$ 10.000.000.</span>
+          </div>
+          <div class="input-hint-small hint">
+            <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>Valor entre R$ 0 e R$ 10.000.000</span>
+          </div>
+        </div>
+
+        <!-- Input B: Aporte Mensal -->
+        <div class="input-group field">
+          <label for="monthlyContributionInput" class="input-label">Aporte mensal <span>(quanto vai investir por mês)</span></label>
+          <div class="input-prefix currency-input-wrap">
+            <span class="input-prefix-label">R$</span>
+            <input type="text" inputmode="numeric" class="styled-input" id="monthlyContributionInput" placeholder="1.000" value="1.000">
+          </div>
+          <div class="input-error-msg err-msg" id="errorMonthly">
+            <svg class="err-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>Aporte inválido. Insira um valor entre R$ 50 e R$ 1.000.000.</span>
+          </div>
+          <div class="input-hint-small hint">
+            <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>Valor entre R$ 50 e R$ 1.000.000</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-row">
+          <button type="button" class="btn-action btn-secondary" id="btnBackTo1">← Voltar</button>
+          <button type="button" class="btn-action btn-primary-navy" id="btnGoStep3">Continuar →</button>
+        </div>
+      </section>
+
+      <!-- ETAPA 3: SEUS DADOS (LEAD) -->
+      <section class="step-content" id="step3" aria-labelledby="step3Title">
+        <h2 class="step-heading" id="step3Title">Para quem preparamos a simulação?</h2>
+        <p class="step-desc">Preencha seus dados para liberar a projeção detalhada e os comparativos.</p>
+
+        <!-- Highlight Callout Box -->
+        <div class="advisor-callout-box">
+          <div class="advisor-avatar" aria-hidden="true">VS</div>
+          <div class="advisor-callout-text">
+            Vitor vai analisar sua simulação e pode entrar em contato para conversar sobre alternativas para o seu caso — sem compromisso.
+          </div>
+        </div>
+
+        <!-- Name Input -->
+        <div class="input-group field">
+          <label for="userNameInput" class="input-label">Seu nome</label>
+          <input type="text" class="styled-input no-prefix" id="userNameInput" placeholder="Ex: Roberto Silva" autocomplete="name">
+          <div class="input-error-msg err-msg" id="errorName">Por favor, preencha seu nome completo.</div>
+        </div>
+
+        <!-- Phone Input -->
+        <div class="input-group field">
+          <label for="userPhoneInput" class="input-label">WhatsApp <span>(com DDD)</span></label>
+          <input type="tel" class="styled-input no-prefix" id="userPhoneInput" placeholder="(11) 99999-9999" maxlength="15" autocomplete="tel">
+          <div class="input-error-msg err-msg" id="errorPhone">Insira um número de WhatsApp válido com DDD (mínimo 10 dígitos).</div>
+        </div>
+
+        <div class="privacy-notice">
+          <span>🔒 Seus dados são usados apenas para contato. Não há spam.</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-row">
+          <button type="button" class="btn-action btn-secondary" id="btnBackTo2">← Voltar</button>
+          <button type="button" class="btn-action btn-primary-gold" id="btnGoStep4">Ver meu resultado →</button>
+        </div>
+      </section>
+
+      <!-- ETAPA 4: RESULTADO -->
+      <section class="step-content" id="step4" aria-labelledby="step4Title">
+        
+        <!-- Header Navy -->
+        <div class="result-navy-banner">
+          <span class="result-badge">Sua simulação</span>
+          <div class="result-greeting" id="resGreeting">Roberto, aqui está sua simulação:</div>
+          <h2 class="result-headline" id="resHeadline">
+            Neste cenário, você poderia ter renda de <span class="highlight-gold" id="resHeadlineVal">R$ 0/mês</span> na aposentadoria.
+          </h2>
+        </div>
+
+        <!-- 1. Dois cards principais -->
+        <div class="result-main-grid">
+          <div class="kpi-main-card gold-border">
+            <div class="kpi-main-label">Patrimônio estimado</div>
+            <div class="kpi-main-val" id="resCardFV">R$ 0</div>
+            <div class="kpi-main-sub" id="resCardYearsSub">em 25 anos</div>
+          </div>
+          <div class="kpi-main-card">
+            <div class="kpi-main-label">Renda mensal de referência</div>
+            <div class="kpi-main-val" id="resCardIncome">R$ 0/mês</div>
+            <div class="kpi-main-sub">considerando 0,5% a.m.</div>
+          </div>
+        </div>
+
+        <!-- 2. Três cards menores -->
+        <div class="result-triplet-grid">
+          <div class="kpi-mini-card">
+            <div class="kpi-mini-label">Tempo até aposentar</div>
+            <div class="kpi-mini-val" id="resCardTime">25 anos</div>
+          </div>
+          <div class="kpi-mini-card">
+            <div class="kpi-mini-label">Total aportado</div>
+            <div class="kpi-mini-val" id="resCardTotalDeposits">R$ 0</div>
+          </div>
+          <div class="kpi-mini-card">
+            <div class="kpi-mini-label">Crescimento estimado</div>
+            <div class="kpi-mini-val" id="resCardInterest" style="color: var(--green-ref)">R$ 0</div>
+          </div>
+        </div>
+
+        <!-- 3. Gráfico de Evolução SVG -->
+        <div class="chart-section">
+          <div class="section-title-sm">
+            <span>Evolução do Patrimônio Acumulado</span>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-dot" style="background: var(--green-ref)"></span> Cenário de referência (11% a.a.)</span>
+              <span class="legend-item"><span class="legend-dot" style="background: var(--gold)"></span> Poupança (6% a.a.)</span>
+            </div>
+          </div>
+          <div class="chart-svg-wrap" id="chartContainer">
+            <!-- Inline SVG rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 4. Composição do Patrimônio Final -->
+        <div class="composition-section">
+          <div class="section-title-sm">
+            <span>Composição do Patrimônio Final</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">Cenário de referência</span>
+          </div>
+          
+          <div class="seg-bar-track" id="segBarTrack" role="progressbar" aria-label="Composição do Patrimônio">
+            <div class="seg-bar-fill seg-navy" id="segInitialBar" style="width: 10%;"></div>
+            <div class="seg-bar-fill seg-gold" id="segDepositsBar" style="width: 40%;"></div>
+            <div class="seg-bar-fill seg-green" id="segInterestBar" style="width: 50%;"></div>
+          </div>
+
+          <div class="composition-legend-grid">
+            <div class="comp-col">
+              <div class="comp-title">
+                <span class="legend-dot" style="background: var(--navy);"></span>
+                Patrimônio inicial
+              </div>
+              <div class="comp-value" id="compValInitial">R$ 0</div>
+            </div>
+            <div class="comp-col">
+              <div class="comp-title">
+                <span class="legend-dot" style="background: var(--gold);"></span>
+                Total de aportes
+              </div>
+              <div class="comp-value" id="compValDeposits">R$ 0</div>
+            </div>
+            <div class="comp-col">
+              <div class="comp-title">
+                <span class="legend-dot" style="background: var(--green-ref);"></span>
+                Crescimento estimado
+              </div>
+              <div class="comp-value" id="compValInterest" style="color: var(--green-ref);">R$ 0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Comparativo de Estratégia -->
+        <div class="strategy-compare-box">
+          <div class="strat-row">
+            <div>
+              <span class="strat-name">Poupança</span>
+              <span class="strat-sub">Hipótese de 6% a.a.</span>
+            </div>
+            <div class="strat-val" id="stratValPoupanca">R$ 0</div>
+          </div>
+          <div class="strat-row highlight-ref">
+            <div>
+              <span class="strat-name" style="color: var(--green-ref);">Cenário de referência</span>
+              <span class="strat-sub">Hipótese de 11% a.a.</span>
+            </div>
+            <div class="strat-val" style="color: var(--green-ref);" id="stratValRef">R$ 0</div>
+          </div>
+          <div class="strat-row" style="background: #FAF8F4;">
+            <div>
+              <span class="strat-name">Diferença estimada</span>
+              <span class="strat-sub">Vantagem do cenário de referência</span>
+            </div>
+            <div>
+              <span class="strat-diff-badge" id="stratValDiff">+ R$ 0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. CTA Final -->
+        <div class="final-cta-card">
+          <p class="disclaimer-lead">
+            Esta é uma projeção hipotética, baseada em hipóteses ilustrativas. O resultado real depende das decisões, das condições de mercado e da estratégia escolhida para o seu perfil.
+          </p>
+          <p class="cta-hook">Vitor pode montar isso com você. Sem custo.</p>
+          <a href="#" target="_blank" rel="noopener noreferrer" class="cta-btn-whatsapp" id="btnWhatsappCTA">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            Falar com Vitor sobre minha estratégia
+          </a>
+          <button type="button" class="btn-download-img" id="btnDownloadCard" onclick="baixarSimulacao()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Baixar minha simulação
+          </button>
+          <div>
+            <button type="button" class="btn-redo" id="btnRedoSim">
+              ↺ Refazer simulação
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Page Footer -->
+    <footer class="app-footer">
+      <p>Simulação com fins educativos. Rentabilidades passadas não garantem resultados futuros.</p>
+      <div class="advisor-meta">Vitor Souza · Assessor XP Investimentos · @vitorsouzainvest</div>
+    </footer>
   </div>
 
-</div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // STATE
+      const state = {
+        currentAge: 35,
+        retireAge: 60,
+        initialPortfolio: 0,
+        monthlyContribution: 1000,
+        userName: '',
+        userPhone: '',
+        currentStep: 1,
 
-<p class="footer">
-  Simulação com fins educativos. Rentabilidades passadas não garantem resultados futuros.<br>
-  <strong>Vitor Souza · Assessor XP Investimentos · @vitorsouzainvest</strong>
-</p>
+        get idade() { return this.currentAge; },
+        set idade(v) { this.currentAge = v; },
+        get aposem() { return this.retireAge; },
+        set aposem(v) { this.retireAge = v; },
+        get patrimonio() { return this.initialPortfolio; },
+        set patrimonio(v) { this.initialPortfolio = v; },
+        get aporte() { return this.monthlyContribution; },
+        set aporte(v) { this.monthlyContribution = v; },
+        get nome() { return this.userName; },
+        set nome(v) { this.userName = v; },
+        get wpp() { return this.userPhone; },
+        set wpp(v) { this.userPhone = v; }
+      };
 
+      // DOM ELEMENTS
+      const stepIndicators = [
+        document.getElementById('stepIndicator1'),
+        document.getElementById('stepIndicator2'),
+        document.getElementById('stepIndicator3'),
+        document.getElementById('stepIndicator4')
+      ];
+
+      const stepViews = [
+        document.getElementById('step1'),
+        document.getElementById('step2'),
+        document.getElementById('step3'),
+        document.getElementById('step4')
+      ];
+
+      // Step 1 controls
+      const currentAgeInput = document.getElementById('currentAgeInput');
+      const retireAgeInput = document.getElementById('retireAgeInput');
+      const currentAgeDisplay = document.getElementById('currentAgeDisplay');
+      const retireAgeDisplay = document.getElementById('retireAgeDisplay');
+      const horizonBadge = document.getElementById('horizonBadge');
+      const horizonText = document.getElementById('horizonText');
+      const btnGoStep2 = document.getElementById('btnGoStep2');
+
+      // Step 2 controls
+      const initialPortfolioInput = document.getElementById('initialPortfolioInput');
+      const monthlyContributionInput = document.getElementById('monthlyContributionInput');
+      const errorInitial = document.getElementById('errorInitial');
+      const errorMonthly = document.getElementById('errorMonthly');
+      const btnBackTo1 = document.getElementById('btnBackTo1');
+      const btnGoStep3 = document.getElementById('btnGoStep3');
+
+      // Step 3 controls
+      const userNameInput = document.getElementById('userNameInput');
+      const userPhoneInput = document.getElementById('userPhoneInput');
+      const errorName = document.getElementById('errorName');
+      const errorPhone = document.getElementById('errorPhone');
+      const btnBackTo2 = document.getElementById('btnBackTo2');
+      const btnGoStep4 = document.getElementById('btnGoStep4');
+
+      // Step 4 controls
+      const resGreeting = document.getElementById('resGreeting');
+      const resHeadline = document.getElementById('resHeadline');
+      const resCardFV = document.getElementById('resCardFV');
+      const resCardYearsSub = document.getElementById('resCardYearsSub');
+      const resCardIncome = document.getElementById('resCardIncome');
+      const resCardTime = document.getElementById('resCardTime');
+      const resCardTotalDeposits = document.getElementById('resCardTotalDeposits');
+      const resCardInterest = document.getElementById('resCardInterest');
+      const chartContainer = document.getElementById('chartContainer');
+      const segInitialBar = document.getElementById('segInitialBar');
+      const segDepositsBar = document.getElementById('segDepositsBar');
+      const segInterestBar = document.getElementById('segInterestBar');
+      const compValInitial = document.getElementById('compValInitial');
+      const compValDeposits = document.getElementById('compValDeposits');
+      const compValInterest = document.getElementById('compValInterest');
+      const stratValPoupanca = document.getElementById('stratValPoupanca');
+      const stratValRef = document.getElementById('stratValRef');
+      const stratValDiff = document.getElementById('stratValDiff');
+      const btnWhatsappCTA = document.getElementById('btnWhatsappCTA');
+      const btnDownloadCard = document.getElementById('btnDownloadCard');
+      const btnRedoSim = document.getElementById('btnRedoSim');
+
+      // FORMATTERS
+      const fmtBRL = (val) => {
+        return new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+          maximumFractionDigits: 0
+        }).format(Math.round(val));
+      };
+
+      const fmtNumberClean = (val) => {
+        return new Intl.NumberFormat('pt-BR', {
+          maximumFractionDigits: 0
+        }).format(Math.round(val));
+      };
+
+      const parseBRLString = (str) => {
+        if (!str) return 0;
+        const cleaned = str.toString().replace(/\D/g, '');
+        return cleaned ? parseInt(cleaned, 10) : 0;
+      };
+
+      // STEP NAVIGATION
+      function goToStep(step) {
+        state.currentStep = step;
+        stepViews.forEach((view, index) => {
+          if (index + 1 === step) {
+            view.classList.add('active');
+          } else {
+            view.classList.remove('active');
+          }
+        });
+
+        stepIndicators.forEach((ind, index) => {
+          const stepNum = index + 1;
+          ind.classList.remove('active', 'completed');
+          if (stepNum === step) {
+            ind.classList.add('active');
+          } else if (stepNum < step) {
+            ind.classList.add('completed');
+          }
+        });
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (step === 4) {
+          computeAndRenderResults();
+        }
+      }
+
+      // NAVIGATION & RESULT HELPERS
+      function goTo(step) {
+        goToStep(step);
+      }
+
+      function buildResult() {
+        computeAndRenderResults();
+      }
+
+      // STEP 1 LOGIC: updateSliders
+      function updateSliders() {
+        let idade = parseInt(currentAgeInput.value, 10);
+        let aposem = parseInt(retireAgeInput.value, 10);
+
+        // Se aposentadoria <= idade atual, força slider e variável primeiro
+        if (aposem <= idade) {
+          aposem = idade + 1;
+          retireAgeInput.value = aposem;
+        }
+
+        state.currentAge = idade;
+        state.retireAge = aposem;
+
+        currentAgeDisplay.innerHTML = `${idade} <span>anos</span>`;
+        retireAgeDisplay.innerHTML = `${aposem} <span>anos</span>`;
+
+        // Recalcula anos e atualiza o hint DEPOIS da correção do slider
+        const anos = aposem - idade;
+        if (anos > 0) {
+          horizonBadge.textContent = `${anos} ${anos === 1 ? 'ano' : 'anos'}`;
+          horizonText.textContent = `→ ${anos} ${anos === 1 ? 'ano' : 'anos'} para investir`;
+        } else {
+          horizonBadge.textContent = '--';
+          horizonText.textContent = '→ Ajuste as idades';
+        }
+      }
+
+      const updateAges = updateSliders;
+
+      currentAgeInput.addEventListener('input', updateSliders);
+      retireAgeInput.addEventListener('input', updateSliders);
+      updateSliders();
+
+      btnGoStep2.addEventListener('click', () => {
+        goToStep(2);
+      });
+
+      // UNIFIED FIELD ERROR HANDLER
+      function setFieldError(inputOrId, errOrId, hasError) {
+        const input = typeof inputOrId === 'string' ? document.getElementById(inputOrId) : inputOrId;
+        const err = typeof errOrId === 'string' ? document.getElementById(errOrId) : errOrId;
+        if (!input) return;
+
+        const prefixContainer = input.closest('.input-prefix');
+        if (prefixContainer) {
+          prefixContainer.classList.toggle('error', hasError);
+        }
+        input.classList.toggle('error', hasError);
+
+        if (err) {
+          err.classList.toggle('show', hasError);
+          err.classList.toggle('visible', hasError);
+        }
+      }
+
+      // STEP 2 LOGIC
+      function handleCurrencyInput(inputEl, errorEl) {
+        inputEl.addEventListener('input', (e) => {
+          const val = e.target.value;
+          if (val === '') {
+            e.target.value = '';
+          } else {
+            const num = parseBRLString(val);
+            e.target.value = fmtNumberClean(num);
+          }
+          setFieldError(inputEl, errorEl, false);
+        });
+      }
+
+      handleCurrencyInput(initialPortfolioInput, errorInitial);
+      handleCurrencyInput(monthlyContributionInput, errorMonthly);
+
+      btnBackTo1.addEventListener('click', () => {
+        goToStep(1);
+      });
+
+      btnGoStep3.addEventListener('click', () => {
+        let isValid = true;
+        const rawInitial = initialPortfolioInput.value.trim();
+        const rawMonthly = monthlyContributionInput.value.trim();
+
+        if (rawInitial === '') {
+          setFieldError(initialPortfolioInput, errorInitial, true);
+          isValid = false;
+        } else {
+          const initialVal = parseBRLString(rawInitial);
+          if (initialVal < 0 || initialVal > 10000000) {
+            setFieldError(initialPortfolioInput, errorInitial, true);
+            isValid = false;
+          } else {
+            setFieldError(initialPortfolioInput, errorInitial, false);
+          }
+        }
+
+        if (rawMonthly === '') {
+          setFieldError(monthlyContributionInput, errorMonthly, true);
+          isValid = false;
+        } else {
+          const monthlyVal = parseBRLString(rawMonthly);
+          if (monthlyVal < 50 || monthlyVal > 1000000) {
+            setFieldError(monthlyContributionInput, errorMonthly, true);
+            isValid = false;
+          } else {
+            setFieldError(monthlyContributionInput, errorMonthly, false);
+          }
+        }
+
+        if (isValid) {
+          state.initialPortfolio = parseBRLString(rawInitial);
+          state.monthlyContribution = parseBRLString(rawMonthly);
+          goToStep(3);
+        }
+      });
+
+      // STEP 3 LOGIC
+      function maskPhone(val) {
+        let digits = val.replace(/\D/g, '');
+        if (digits.length > 11) digits = digits.slice(0, 11);
+
+        if (digits.length <= 2) {
+          return digits ? `(${digits}` : '';
+        }
+        if (digits.length <= 6) {
+          return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+        }
+        if (digits.length <= 10) {
+          return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+        }
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+      }
+
+      userNameInput.addEventListener('input', () => {
+        if (userNameInput.value.trim()) {
+          setFieldError(userNameInput, errorName, false);
+        }
+      });
+
+      userPhoneInput.addEventListener('input', (e) => {
+        e.target.value = maskPhone(e.target.value);
+        if (e.target.value.replace(/\D/g, '').length >= 10) {
+          setFieldError(userPhoneInput, errorPhone, false);
+        }
+      });
+
+      btnBackTo2.addEventListener('click', () => {
+        goToStep(2);
+      });
+
+      function validateStep3() {
+        let isValid = true;
+        const nameVal = userNameInput.value.trim();
+        const digits = userPhoneInput.value.replace(/\D/g, '');
+
+        if (!nameVal) {
+          setFieldError(userNameInput, errorName, true);
+          isValid = false;
+        } else {
+          setFieldError(userNameInput, errorName, false);
+        }
+
+        if (digits.length < 10) {
+          setFieldError(userPhoneInput, errorPhone, true);
+          isValid = false;
+        } else {
+          setFieldError(userPhoneInput, errorPhone, false);
+        }
+
+        if (isValid) {
+          state.userName = nameVal;
+          state.userPhone = userPhoneInput.value;
+
+          buildResult();
+          goTo(4);
+
+          // Envio de lead ao Google Apps Script
+          try {
+            const payload = {
+              nome: state.nome,
+              wpp: state.wpp,
+              idade: state.idade,
+              aposem: state.aposem,
+              patrimonio: state.patrimonio,
+              aporte: state.aporte
+            };
+
+            fetch('https://script.google.com/macros/s/AKfycbw00iwTzcmMASktImklpfm695Np6dM5p4fSconrH4VYwAT7Zx8NYwsD_hJSuotXfF58yQ/exec', {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            }).catch(() => {});
+          } catch (e) {
+            // Silencioso para assegurar navegação contínua
+          }
+        }
+      }
+
+      btnGoStep4.addEventListener('click', validateStep3);
+
+      // CALCULATION LOGIC
+      function calculateFV(pv, pmt, r, months) {
+        if (months <= 0) return pv;
+        const fvPV = pv * Math.pow(1 + r, months);
+        const fvPMT = pmt * ((Math.pow(1 + r, months) - 1) / r);
+        return fvPV + fvPMT;
+      }
+
+      function computeAndRenderResults() {
+        const years = state.retireAge - state.currentAge;
+        const months = years * 12;
+        const pv = state.initialPortfolio;
+        const pmt = state.monthlyContribution;
+
+        // Equivalent monthly rates from effective annual rates (Math.pow(1 + rate, 1/12) - 1)
+        const rPoup = Math.pow(1 + 0.06, 1 / 12) - 1;
+        const rDiv = Math.pow(1 + 0.11, 1 / 12) - 1;
+
+        const fvPoupanca = calculateFV(pv, pmt, rPoup, months);
+        const fvRef = calculateFV(pv, pmt, rDiv, months);
+
+        const totalDeposited = pmt * months;
+        const totalGrowthRef = Math.max(0, fvRef - pv - totalDeposited);
+        const monthlyIncomeRef = fvRef * 0.005; // 0.5% a.m.
+
+        // Greeting & Headline
+        const firstName = state.userName ? state.userName.split(' ')[0] : 'Investidor';
+        resGreeting.textContent = `${firstName}, aqui está sua simulação:`;
+
+        if (monthlyIncomeRef >= 5000) {
+          resHeadline.innerHTML = `Neste cenário, você poderia ter renda de <span class="highlight-gold">${fmtBRL(monthlyIncomeRef)}/mês</span> na aposentadoria.`;
+        } else {
+          resHeadline.innerHTML = `Neste cenário, seu patrimônio poderia chegar a <span class="highlight-gold">${fmtBRL(fvRef)}</span>.`;
+        }
+
+        // Two Main Cards
+        resCardFV.textContent = fmtBRL(fvRef);
+        resCardYearsSub.textContent = `em ${years} ${years === 1 ? 'ano' : 'anos'}`;
+        resCardIncome.textContent = `${fmtBRL(monthlyIncomeRef)}/mês`;
+
+        // Three Smaller Cards
+        resCardTime.textContent = `${years} ${years === 1 ? 'ano' : 'anos'}`;
+        resCardTotalDeposits.textContent = fmtBRL(totalDeposited);
+        resCardInterest.textContent = fmtBRL(totalGrowthRef);
+
+        // Composition Segmented Bar
+        const sumComp = pv + totalDeposited + totalGrowthRef;
+        let pctInitial = sumComp > 0 ? (pv / sumComp) * 100 : 0;
+        let pctDeposits = sumComp > 0 ? (totalDeposited / sumComp) * 100 : 0;
+        let pctGrowth = sumComp > 0 ? (totalGrowthRef / sumComp) * 100 : 100;
+
+        // Ensure visible minimum if value > 0
+        segInitialBar.style.width = `${pctInitial.toFixed(1)}%`;
+        segDepositsBar.style.width = `${pctDeposits.toFixed(1)}%`;
+        segInterestBar.style.width = `${pctGrowth.toFixed(1)}%`;
+
+        compValInitial.textContent = fmtBRL(pv);
+        compValDeposits.textContent = fmtBRL(totalDeposited);
+        compValInterest.textContent = fmtBRL(totalGrowthRef);
+
+        // Strategy Comparison
+        stratValPoupanca.textContent = fmtBRL(fvPoupanca);
+        stratValRef.textContent = fmtBRL(fvRef);
+        const diffStrat = Math.max(0, fvRef - fvPoupanca);
+        stratValDiff.textContent = `+ ${fmtBRL(diffStrat)}`;
+
+        // WhatsApp CTA URL
+        const msgText = encodeURIComponent(
+          `Olá Vitor, fiz a simulação de aposentadoria no seu site!\n\n` +
+          `• Nome: ${state.userName}\n` +
+          `• Idade atual: ${state.currentAge} anos\n` +
+          `• Quero me aposentar com: ${state.retireAge} anos\n` +
+          `• Patrimônio investido hoje: ${fmtBRL(state.initialPortfolio)}\n` +
+          `• Aporte mensal: ${fmtBRL(state.monthlyContribution)}\n\n` +
+          `Gostaria de entender como montar uma estratégia personalizada de investimentos com a XP.`
+        );
+        btnWhatsappCTA.href = `https://wa.me/5511997743956?text=${msgText}`;
+
+        // Render SVG Line Chart
+        renderEvolutionChart(pv, pmt, years, rPoup, rDiv);
+      }
+
+      function renderEvolutionChart(pv, pmt, totalYears, rPoup, rRef) {
+        chartContainer.innerHTML = '';
+        const width = chartContainer.clientWidth || 600;
+        const height = 210;
+        const padLeft = 70;
+        const padRight = 20;
+        const padTop = 20;
+        const padBottom = 32;
+
+        const plotW = width - padLeft - padRight;
+        const plotH = height - padTop - padBottom;
+
+        // Calculate data points for each year
+        const dataPoup = [];
+        const dataRef = [];
+        const startAge = state.currentAge;
+        const endAge = state.retireAge;
+
+        // Step years for curve (up to 20 samples)
+        const samples = Math.min(totalYears, 20);
+        for (let i = 0; i <= samples; i++) {
+          const tYears = (totalYears / samples) * i;
+          const tMonths = Math.round(tYears * 12);
+          const ageAtT = Math.round(startAge + tYears);
+
+          const valP = calculateFV(pv, pmt, rPoup, tMonths);
+          const valR = calculateFV(pv, pmt, rRef, tMonths);
+
+          dataPoup.push({ year: tYears, age: ageAtT, val: valP });
+          dataRef.push({ year: tYears, age: ageAtT, val: valR });
+        }
+
+        const maxVal = Math.max(dataRef[dataRef.length - 1].val, dataPoup[dataPoup.length - 1].val) * 1.08;
+
+        const getX = (t) => padLeft + (t / totalYears) * plotW;
+        const getY = (val) => padTop + plotH - (val / maxVal) * plotH;
+
+        // Build SVG paths
+        let pathRef = '';
+        let pathPoup = '';
+        let areaRef = `M ${getX(0)} ${getY(0)} `;
+
+        dataRef.forEach((d, i) => {
+          const x = getX(d.year);
+          const y = getY(d.val);
+          if (i === 0) {
+            pathRef += `M ${x.toFixed(1)} ${y.toFixed(1)}`;
+            areaRef = `M ${x.toFixed(1)} ${y.toFixed(1)}`;
+          } else {
+            pathRef += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+            areaRef += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+          }
+        });
+
+        // Close area path for ref
+        const lastRefX = getX(totalYears);
+        const zeroY = padTop + plotH;
+        areaRef += ` L ${lastRefX.toFixed(1)} ${zeroY} L ${padLeft} ${zeroY} Z`;
+
+        dataPoup.forEach((d, i) => {
+          const x = getX(d.year);
+          const y = getY(d.val);
+          pathPoup += (i === 0 ? `M ` : ` L `) + `${x.toFixed(1)} ${y.toFixed(1)}`;
+        });
+
+        // Horizontal Grid lines & Y axis labels (4 steps)
+        let gridLines = '';
+        for (let s = 0; s <= 3; s++) {
+          const ratio = s / 3;
+          const valAtGrid = maxVal * ratio;
+          const yPos = padTop + plotH - ratio * plotH;
+
+          // Format value for Y label (compact e.g. R$ 500k or R$ 1,2M)
+          let labelText = '';
+          if (valAtGrid >= 1000000) {
+            labelText = 'R$ ' + (valAtGrid / 1000000).toFixed(1).replace('.', ',') + 'M';
+          } else if (valAtGrid >= 1000) {
+            labelText = 'R$ ' + Math.round(valAtGrid / 1000) + 'k';
+          } else {
+            labelText = 'R$ ' + Math.round(valAtGrid);
+          }
+
+          gridLines += `
+            <line x1="${padLeft}" y1="${yPos.toFixed(1)}" x2="${width - padRight}" y2="${yPos.toFixed(1)}" stroke="#E8E4DA" stroke-dasharray="3 3" />
+            <text x="${padLeft - 8}" y="${(yPos + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="#6B6B7A" font-family="Montserrat">${labelText}</text>
+          `;
+        }
+
+        // X Axis labels
+        const xLabelStart = `Hoje (${startAge}a)`;
+        const xLabelMidAge = Math.round((startAge + endAge) / 2);
+        const xLabelMid = `${xLabelMidAge} anos`;
+        const xLabelEnd = `${endAge} anos`;
+
+        const midX = padLeft + plotW / 2;
+        const bottomY = height - 10;
+
+        const svgContent = `
+          <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="refGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#15803D" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="#15803D" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            
+            <!-- Grid -->
+            ${gridLines}
+
+            <!-- X Axis Baseline -->
+            <line x1="${padLeft}" y1="${padTop + plotH}" x2="${width - padRight}" y2="${padTop + plotH}" stroke="#E3DFD3" />
+
+            <!-- Area under reference -->
+            <path d="${areaRef}" fill="url(#refGradient)" />
+
+            <!-- Poupança Line (Gold) -->
+            <path d="${pathPoup}" fill="none" stroke="#B08C30" stroke-width="2.5" stroke-linecap="round" />
+
+            <!-- Reference Line (Green) -->
+            <path d="${pathRef}" fill="none" stroke="#15803D" stroke-width="3" stroke-linecap="round" />
+
+            <!-- End dots -->
+            <circle cx="${getX(totalYears).toFixed(1)}" cy="${getY(dataPoup[dataPoup.length - 1].val).toFixed(1)}" r="4" fill="#B08C30" stroke="#FFFFFF" stroke-width="2" />
+            <circle cx="${getX(totalYears).toFixed(1)}" cy="${getY(dataRef[dataRef.length - 1].val).toFixed(1)}" r="4.5" fill="#15803D" stroke="#FFFFFF" stroke-width="2" />
+
+            <!-- X Labels -->
+            <text x="${padLeft}" y="${bottomY}" text-anchor="start" font-size="10" font-weight="600" fill="#6B6B7A" font-family="Montserrat">${xLabelStart}</text>
+            <text x="${midX.toFixed(1)}" y="${bottomY}" text-anchor="middle" font-size="10" font-weight="500" fill="#6B6B7A" font-family="Montserrat">${xLabelMid}</text>
+            <text x="${width - padRight}" y="${bottomY}" text-anchor="end" font-size="10" font-weight="700" fill="#101426" font-family="Montserrat">${xLabelEnd}</text>
+          </svg>
+        `;
+
+        chartContainer.innerHTML = svgContent;
+      }
+
+      // Redo Simulation button
+      btnRedoSim.addEventListener('click', () => {
+        goToStep(1);
+      });
+
+      // Helper for rounded rectangles on canvas
+      function drawRoundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+
+      // FUNÇÃO DE DOWNLOAD DO CARD PNG
+      async function baixarSimulacao() {
+        try {
+          if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+          }
+        } catch (e) {
+          // Segue mesmo se a API de fontes falhar
+        }
+
+        const width = 1080;
+        const height = 1350;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // Cálculos da simulação atual
+        const years = Math.max(1, state.retireAge - state.currentAge);
+        const months = years * 12;
+        const pv = state.initialPortfolio;
+        const pmt = state.monthlyContribution;
+        const rDiv = Math.pow(1 + 0.11, 1 / 12) - 1;
+        const fvRef = calculateFV(pv, pmt, rDiv, months);
+        const monthlyIncomeRef = fvRef * 0.005;
+
+        const fvFormatted = fmtBRL(fvRef);
+        const incomeFormatted = `${fmtBRL(monthlyIncomeRef)}/mês`;
+        const pmtFormatted = fmtBRL(pmt);
+
+        const firstName = state.userName ? state.userName.trim().split(' ')[0] : 'Investidor';
+
+        // 1. Recorte do card com cantos arredondados de ~56px
+        drawRoundedRect(ctx, 0, 0, width, height, 56);
+        ctx.clip();
+
+        // 2. Fundo off-white
+        ctx.fillStyle = '#FAF8F4';
+        ctx.fillRect(0, 0, width, height);
+
+        // 3. Cabeçalho Navy (0 a 500)
+        ctx.fillStyle = '#101426';
+        ctx.fillRect(0, 0, width, 500);
+
+        // 4. Rodapé Creme (1222 até o fim)
+        ctx.fillStyle = '#F4F1EA';
+        ctx.fillRect(0, 1222, width, height - 1222);
+
+        // === CONTEÚDO DO CABEÇALHO ===
+        ctx.textAlign = 'center';
+
+        // Tag "SIMULAÇÃO DE APOSENTADORIA"
+        ctx.font = '700 21px Montserrat, sans-serif';
+        ctx.fillStyle = '#C6A34E';
+        // Espaçamento visual de letras na tag
+        const tagText = 'S I M U L A Ç Ã O   D E   A P O S E N T A D O R I A';
+        ctx.fillText(tagText, 540, 115);
+
+        // Pequena barra decorativa dourada
+        ctx.fillStyle = '#C6A34E';
+        ctx.fillRect(500, 140, 80, 3.5);
+
+        // Primeiro nome do usuário em dourado claro
+        let nameFontSize = 46;
+        ctx.font = `600 ${nameFontSize}px Montserrat, sans-serif`;
+        while (ctx.measureText(firstName).width > 880 && nameFontSize > 28) {
+          nameFontSize -= 2;
+          ctx.font = `600 ${nameFontSize}px Montserrat, sans-serif`;
+        }
+        ctx.fillStyle = '#E8CD78';
+        ctx.fillText(firstName, 540, 215);
+
+        // Título quebrado em até 2 linhas centralizadas (y ~330 e 414)
+        ctx.font = '800 60px Montserrat, sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('Quanto você poderá construir', 540, 330);
+        ctx.fillText('até a aposentadoria?', 540, 414);
+
+        // === CONTEÚDO DO CORPO ===
+        // Label "PATRIMÔNIO PROJETADO" cinza ~30px (y ~575)
+        ctx.font = '700 30px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText('PATRIMÔNIO PROJETADO', 540, 575);
+
+        // Valor em navy extrabold ~92px (y ~695) com destaque máximo e adaptação automática
+        let fvFontSize = 92;
+        ctx.font = `800 ${fvFontSize}px Montserrat, sans-serif`;
+        while (ctx.measureText(fvFormatted).width > 900 && fvFontSize > 48) {
+          fvFontSize -= 2;
+          ctx.font = `800 ${fvFontSize}px Montserrat, sans-serif`;
+        }
+        ctx.fillStyle = '#101426';
+        ctx.fillText(fvFormatted, 540, 695);
+
+        // Label "RENDA MENSAL DE REFERÊNCIA" cinza ~24px (y ~770)
+        ctx.font = '700 24px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText('RENDA MENSAL DE REFERÊNCIA', 540, 770);
+
+        // Valor dourado ~46px com "/mês" (y ~830)
+        let incomeFontSize = 46;
+        ctx.font = `800 ${incomeFontSize}px Montserrat, sans-serif`;
+        while (ctx.measureText(incomeFormatted).width > 900 && incomeFontSize > 30) {
+          incomeFontSize -= 2;
+          ctx.font = `800 ${incomeFontSize}px Montserrat, sans-serif`;
+        }
+        ctx.fillStyle = '#B08C30';
+        ctx.fillText(incomeFormatted, 540, 830);
+
+        // Nota "referência de 0,5% a.m." pequena (y ~864)
+        ctx.font = '500 20px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText('referência de 0,5% a.m.', 540, 864);
+
+        // Card branco discreto de evolução (y 895-1027, x 120-960, borda cinza clara, cantos 22px)
+        const evoCardX = 120;
+        const evoCardY = 895;
+        const evoCardW = 840;
+        const evoCardH = 132;
+
+        drawRoundedRect(ctx, evoCardX, evoCardY, evoCardW, evoCardH, 22);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#E3DFD3';
+        ctx.stroke();
+
+        // Texto à esquerda dentro do card
+        ctx.textAlign = 'left';
+        ctx.font = '600 22px Montserrat, sans-serif';
+        ctx.fillStyle = '#101426';
+        ctx.fillText('Evolução ilustrativa do patrimônio', evoCardX + 36, evoCardY + 74);
+
+        // 6 barras verticais arredondadas ascendentes à direita do card
+        const barHeights = [24, 38, 52, 68, 84, 100];
+        const barWidth = 16;
+        const barGap = 16;
+        const totalBarsWidth = (6 * barWidth) + (5 * barGap);
+        const barsStartX = evoCardX + evoCardW - 40 - totalBarsWidth;
+        const barsBaseY = evoCardY + evoCardH - 16;
+
+        for (let i = 0; i < 6; i++) {
+          const bh = barHeights[i];
+          const bx = barsStartX + i * (barWidth + barGap);
+          const by = barsBaseY - bh;
+          const isLast = (i === 5);
+
+          drawRoundedRect(ctx, bx, by, barWidth, bh, 8);
+          ctx.fillStyle = isLast ? '#B08C30' : '#E8CD78';
+          ctx.fill();
+        }
+
+        // Grade de 4 caixas (y ~1052, altura ~100, x 120-960, 3 espaços de 28px)
+        // Largura total 840 -> (840 - 3 * 28) / 4 = 189px cada caixa
+        const boxY = 1052;
+        const boxH = 100;
+        const boxW = 189;
+        const boxGap = 28;
+
+        const boxesData = [
+          { label: 'Idade atual', val: `${state.currentAge} anos` },
+          { label: 'Aposentadoria', val: `${state.retireAge} anos` },
+          { label: 'Aporte mensal', val: pmtFormatted },
+          { label: 'Tempo invest.', val: `${years} anos` }
+        ];
+
+        boxesData.forEach((box, i) => {
+          const bx = 120 + i * (boxW + boxGap);
+
+          drawRoundedRect(ctx, bx, boxY, boxW, boxH, 16);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#E3DFD3';
+          ctx.stroke();
+
+          ctx.textAlign = 'center';
+          // Rótulo pequeno cinza
+          ctx.font = '600 17px Montserrat, sans-serif';
+          ctx.fillStyle = '#6B6B7A';
+          ctx.fillText(box.label, bx + boxW / 2, boxY + 38);
+
+          // Valor navy bold com medição para não cortar
+          let valSize = 22;
+          ctx.font = `700 ${valSize}px Montserrat, sans-serif`;
+          while (ctx.measureText(box.val).width > (boxW - 16) && valSize > 14) {
+            valSize -= 1;
+            ctx.font = `700 ${valSize}px Montserrat, sans-serif`;
+          }
+          ctx.fillStyle = '#101426';
+          ctx.fillText(box.val, bx + boxW / 2, boxY + 76);
+        });
+
+        // Observação pequena centralizada em cinza (~19px, até 2 linhas, y ~1184)
+        ctx.textAlign = 'center';
+        ctx.font = '500 19px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText('Resultado baseado nas hipóteses utilizadas nesta simulação.', 540, 1176);
+        ctx.fillText('Não representa garantia de rentabilidade ou de renda futura.', 540, 1202);
+
+        // Rodapé creme
+        ctx.font = '700 22px Montserrat, sans-serif';
+        ctx.fillStyle = '#B08C30';
+        ctx.fillText('S I M U L A Ç Ã O   E D U C A T I V A', 540, 1266);
+
+        ctx.font = '600 27px Montserrat, sans-serif';
+        ctx.fillStyle = '#101426';
+        ctx.fillText('Vitor Souza · Assessor XP Investimentos', 540, 1304);
+
+        ctx.font = '700 27px Montserrat, sans-serif';
+        ctx.fillStyle = '#101426';
+        ctx.fillText('@vitorsouzainvest', 540, 1339);
+
+        // Download automático via <a download>
+        const dataUrl = canvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.download = 'minha-simulacao-aposentadoria-vitor-souza.png';
+        downloadLink.href = dataUrl;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+
+      // Expor para chamada via inline onclick ou listener
+      window.baixarSimulacao = baixarSimulacao;
+      if (btnDownloadCard) {
+        btnDownloadCard.addEventListener('click', baixarSimulacao);
+      }
+
+      // Responsive redraw on window resize if at step 4
+      window.addEventListener('resize', () => {
+        if (state.currentStep === 4) {
+          const years = state.retireAge - state.currentAge;
+          const rPoup = Math.pow(1 + 0.06, 1 / 12) - 1;
+          const rDiv = Math.pow(1 + 0.11, 1 / 12) - 1;
+          renderEvolutionChart(state.initialPortfolio, state.monthlyContribution, years, rPoup, rDiv);
+        }
+      });
+    });
+  </script>
 <script>
-// ── STATE ───────────────────────────────────────────────
-const state = {
-  idade: 35, aposem: 60,
-  patrimonio: 0, aporte: 500,
-  nome: '', wpp: ''
-};
+/* Skip artifact shell — fixed helpers served beside every artifact. */
+(function () {
+  "use strict";
 
-// Resultado atual, usado pela geração da imagem
-const resultData = { fvDiv: 0, renda: 0, anos: 0, series: [] };
+  var fmt = {
+    num: function (v, opts) { return new Intl.NumberFormat("pt-BR", opts || {}).format(v); },
+    brl: function (v) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v); },
+    pct: function (v) { return new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 }).format(v); }
+  };
 
-// ── NAVIGATION ──────────────────────────────────────────
-function goTo(n) {
-  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.step-dot').forEach((d, i) => {
-    d.classList.remove('active', 'done');
-    if (i + 1 < n) d.classList.add('done');
-    if (i + 1 === n) d.classList.add('active');
-  });
-  document.getElementById('step-' + n).classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ── SLIDERS ─────────────────────────────────────────────
-const sliderIdade = document.getElementById('slider-idade');
-const sliderApos  = document.getElementById('slider-apos');
-const valIdade    = document.getElementById('val-idade');
-const valApos     = document.getElementById('val-apos');
-const anosHint    = document.getElementById('anos-hint');
-
-function updateSliders() {
-  state.idade  = +sliderIdade.value;
-  state.aposem = +sliderApos.value;
-  valIdade.innerHTML = state.idade + ' <em>anos</em>';
-  valApos.innerHTML  = state.aposem + ' <em>anos</em>';
-  const anos = Math.max(0, state.aposem - state.idade);
-  anosHint.textContent = anos > 0
-    ? '→ ' + anos + ' anos para investir'
-    : '→ Ajuste as idades';
-  if (state.aposem <= state.idade) {
-    sliderApos.value = state.idade + 1;
-    state.aposem = state.idade + 1;
-    valApos.innerHTML = state.aposem + ' <em>anos</em>';
-  }
-}
-
-sliderIdade.addEventListener('input', updateSliders);
-sliderApos.addEventListener('input', updateSliders);
-updateSliders();
-
-// ── VALIDATION ──────────────────────────────────────────
-function validateStep2() {
-  const p = document.getElementById('inp-patrimonio').value;
-  const a = document.getElementById('inp-aporte').value;
-  let ok = true;
-
-  if (p === '' || +p < 0 || +p > 10000000) {
-    document.getElementById('inp-patrimonio').classList.add('error');
-    document.getElementById('err-patrimonio').classList.add('show');
-    ok = false;
-  } else {
-    document.getElementById('inp-patrimonio').classList.remove('error');
-    document.getElementById('err-patrimonio').classList.remove('show');
-    state.patrimonio = +p;
+  // axisFmt keeps axis tick labels short (compact notation) so long values
+  // (e.g. full BRL amounts) never clip against the plot edge.
+  function axisFmt(v) {
+    return fmt.num(v, { notation: "compact", maximumFractionDigits: 1 });
   }
 
-  if (!a || +a < 50 || +a > 1000000) {
-    document.getElementById('inp-aporte').classList.add('error');
-    document.getElementById('err-aporte').classList.add('show');
-    ok = false;
-  } else {
-    document.getElementById('inp-aporte').classList.remove('error');
-    document.getElementById('err-aporte').classList.remove('show');
-    state.aporte = +a;
+  // format accepts a function OR one of the fmt names ("num" | "brl" | "pct").
+  function coerceFormat(spec) {
+    if (typeof spec === "function") return spec;
+    if (typeof spec === "string" && fmt[spec]) return fmt[spec];
+    return function (v) { return fmt.num(v); };
   }
 
-  if (ok) goTo(3);
-}
-
-function validateStep3() {
-  const nome = document.getElementById('inp-nome').value.trim();
-  const wpp  = document.getElementById('inp-wpp').value.replace(/\D/g, '');
-  let ok = true;
-
-  if (!nome) {
-    document.getElementById('inp-nome').classList.add('error');
-    document.getElementById('err-nome').classList.add('show');
-    ok = false;
-  } else {
-    document.getElementById('inp-nome').classList.remove('error');
-    document.getElementById('err-nome').classList.remove('show');
-    state.nome = nome;
+  function accent() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#2563eb";
+  }
+  function mutedColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--text-muted").trim() || "#5b6472";
+  }
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function frame(el, w, h) {
+    var svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, role: "img" });
+    el.innerHTML = "";
+    el.appendChild(svg);
+    return svg;
   }
 
-  if (wpp.length < 10) {
-    document.getElementById('inp-wpp').classList.add('error');
-    document.getElementById('err-wpp').classList.add('show');
-    ok = false;
-  } else {
-    document.getElementById('inp-wpp').classList.remove('error');
-    document.getElementById('err-wpp').classList.remove('show');
-    state.wpp = wpp;
+  // maxOf guards the axis scale: empty values would give -Infinity (truthy,
+  // so "|| 1" can't catch it) and a non-positive max would flip the chart.
+  function maxOf(values) {
+    var m = values.length ? Math.max.apply(null, values) : 0;
+    return m > 0 ? m : 1;
   }
 
-  if (ok) {
-    buildResult();
-    goTo(4);
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw00iwTzcmMASktImklpfm695Np6dM5p4fSconrH4VYwAT7Zx8NYwsD_hJSuotXfF58yQ/exec';
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nome:       state.nome,
-        wpp:        state.wpp,
-        idade:      state.idade,
-        aposem:     state.aposem,
-        patrimonio: state.patrimonio,
-        aporte:     state.aporte
-      })
-    }).catch(function() {});
-  }
-}
-
-// WhatsApp mask
-document.getElementById('inp-wpp').addEventListener('input', function() {
-  let v = this.value.replace(/\D/g, '').slice(0, 11);
-  if (v.length >= 7)
-    v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
-  else if (v.length >= 3)
-    v = '(' + v.slice(0,2) + ') ' + v.slice(2);
-  this.value = v;
-});
-
-// ── MATH ────────────────────────────────────────────────
-function futureValue(pv, pmt, rate, n) {
-  // FV = PV*(1+r)^n + PMT*[((1+r)^n - 1)/r]
-  const factor = Math.pow(1 + rate, n);
-  return pv * factor + pmt * ((factor - 1) / rate);
-}
-
-function fmt(val) {
-  if (val >= 1e6) return 'R$ ' + (val / 1e6).toFixed(2).replace('.', ',') + ' mi';
-  return 'R$ ' + Math.round(val).toLocaleString('pt-BR');
-}
-
-function fmtShort(val) {
-  if (val >= 1e6) return 'R$ ' + (val / 1e6).toFixed(1).replace('.', ',') + ' mi';
-  if (val >= 1e3) return 'R$ ' + Math.round(val / 1e3) + ' mil';
-  return 'R$ ' + Math.round(val);
-}
-
-// ── CHART: evolução do patrimônio ──────────────────────
-function renderChart(ptsPoup, ptsDiv, anos) {
-  const W = 640, H = 300;
-  const pad = { t: 16, r: 14, b: 36, l: 70 };
-  const maxV = Math.max.apply(null, ptsDiv) * 1.06 || 1;
-  const last = ptsDiv.length - 1;
-
-  const x = i => pad.l + (W - pad.l - pad.r) * (i / last);
-  const y = v => pad.t + (H - pad.t - pad.b) * (1 - v / maxV);
-
-  const line = pts => pts.map((v, i) =>
-    (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(v).toFixed(1)
-  ).join(' ');
-
-  // Gridlines + eixo Y
-  let grid = '';
-  for (let g = 0; g <= 4; g++) {
-    const v = maxV * g / 4;
-    const yy = y(v);
-    grid += '<line x1="' + pad.l + '" y1="' + yy.toFixed(1) + '" x2="' + (W - pad.r) + '" y2="' + yy.toFixed(1) + '" stroke="#D2CFC8" stroke-width="1"' + (g ? ' stroke-dasharray="3 4"' : '') + '/>';
-    grid += '<text x="' + (pad.l - 8) + '" y="' + (yy + 4).toFixed(1) + '" text-anchor="end" font-size="11" font-weight="600" fill="#767684" font-family="Montserrat, sans-serif">' + fmtShort(v) + '</text>';
-  }
-
-  // Eixo X (anos)
-  const stepX = Math.max(1, Math.ceil(anos / 6));
-  let xlab = '';
-  for (let yr = 0; yr <= anos; yr += stepX) {
-    xlab += '<text x="' + x(yr).toFixed(1) + '" y="' + (H - pad.b + 22) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#767684" font-family="Montserrat, sans-serif">' + yr + 'a</text>';
-  }
-
-  const svg =
-    '<svg class="chart-svg" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Evolução do patrimônio ao longo do tempo">' +
-    grid + xlab +
-    '<path d="' + line(ptsPoup) + '" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<path d="' + line(ptsDiv) + '" fill="none" stroke="#B08C30" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '</svg>';
-
-  document.getElementById('chart-evolucao').innerHTML = svg;
-}
-
-// ── COMPOSIÇÃO do patrimônio final ─────────────────────
-function renderComposition(pv, totalAp, cresc, fv) {
-  const parts = [
-    { label: 'Patrimônio inicial',     val: pv,      cls: 'seg-inicial' },
-    { label: 'Total de aportes',       val: totalAp, cls: 'seg-aportes' },
-    { label: 'Crescimento estimado',   val: cresc,   cls: 'seg-cresc' }
-  ];
-
-  let bar = '', legend = '';
-  parts.forEach(function(p) {
-    const pct = fv > 0 ? (p.val / fv * 100) : 0;
-    if (pct > 0.5) {
-      bar += '<div class="comp-seg ' + p.cls + '" style="width:' + pct + '%">' + (pct >= 14 ? Math.round(pct) + '%' : '') + '</div>';
+  // bar(el, {labels:[], values:[], color?, format?}) — vertical bar chart.
+  function bar(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 12, plotH = H - padT - padB;
+    var step = plotW / n, bw = Math.min(step * 0.62, 64);
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 12, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
     }
-    legend += '<div class="comp-legend-row">' +
-      '<div class="comp-legend-label"><span class="legend-dot ' + p.cls + '"></span>' + p.label + '</div>' +
-      '<div class="comp-legend-val">' + fmt(p.val) + ' <em>(' + Math.round(pct) + '%)</em></div>' +
-      '</div>';
-  });
-
-  document.getElementById('comp-bar').innerHTML = bar;
-  document.getElementById('comp-legend').innerHTML = legend;
-}
-
-function buildResult() {
-  const anos = Math.max(1, state.aposem - state.idade);
-  const n    = anos * 12;
-  const pv   = state.patrimonio;
-  const pmt  = state.aporte;
-
-  // Poupança: hipótese de 6% a.a. efetiva → taxa mensal equivalente
-  const rPoup = Math.pow(1 + 0.06, 1/12) - 1;
-  // Cenário de referência: hipótese de 11% a.a. efetiva → taxa mensal equivalente
-  const rDiv  = Math.pow(1 + 0.11, 1/12) - 1;
-
-  const fvPoup = futureValue(pv, pmt, rPoup, n);
-  const fvDiv  = futureValue(pv, pmt, rDiv, n);
-  const diff   = fvDiv - fvPoup;
-
-  // Renda: 0.5% a.m. sobre patrimônio diversificado
-  const renda = fvDiv * 0.005;
-
-  // Indicadores novos
-  const totalAportado = pmt * n;
-  const crescimento   = fvDiv - pv - totalAportado;
-
-  // Headline
-  const nomeFirst = state.nome.split(' ')[0];
-  document.getElementById('res-saudacao').textContent = nomeFirst + ', aqui está sua simulação:';
-
-  const heMsg = renda >= 5000
-    ? 'Neste cenário, você poderia ter <em>renda de ' + fmt(renda) + '/mês</em> na aposentadoria.'
-    : 'Neste cenário, seu patrimônio poderia chegar a <em>' + fmt(fvDiv) + '</em>.';
-  document.getElementById('res-headline').innerHTML = heMsg;
-
-  document.getElementById('res-patrimonio-final').innerHTML = fmt(fvDiv).replace('R$ ', 'R$<br>') + ' <em></em>';
-  document.getElementById('res-anos-label').textContent = 'em ' + anos + ' anos';
-  document.getElementById('res-renda').innerHTML = fmt(renda).replace('R$ ', 'R$<br>') + ' <em></em>';
-
-  // Novos indicadores
-  document.getElementById('res-tempo').innerHTML = anos + ' <em>anos</em>';
-  document.getElementById('res-tempo-sub').textContent = 'aposentadoria aos ' + state.aposem + ' anos';
-  document.getElementById('res-aportado').innerHTML = fmt(totalAportado).replace('R$ ', 'R$<br>');
-  document.getElementById('res-aportado-sub').textContent = fmt(state.aporte) + '/mês';
-  document.getElementById('res-crescimento').innerHTML = fmt(crescimento).replace('R$ ', 'R$<br>');
-
-  document.getElementById('res-poup').textContent = fmt(fvPoup);
-  document.getElementById('res-div').textContent  = fmt(fvDiv);
-  document.getElementById('res-diff').textContent = '+ ' + fmt(diff);
-
-  // Dados para a imagem do resultado
-  resultData.fvDiv = fvDiv;
-  resultData.renda = renda;
-  resultData.anos  = anos;
-
-  // Gráfico de evolução (amostragem anual, mês a mês igual ao cálculo)
-  const ptsPoup = [], ptsDiv = [];
-  for (let yr = 0; yr <= anos; yr++) {
-    ptsPoup.push(futureValue(pv, pmt, rPoup, yr * 12));
-    ptsDiv.push(futureValue(pv, pmt, rDiv, yr * 12));
+    cfg.values.forEach(function (v, i) {
+      var bh = Math.max(0, (v / max) * plotH);
+      var x = padL + i * step + (step - bw) / 2;
+      var y = padT + plotH - bh;
+      var r = svgEl("rect", { x: x, y: y, width: bw, height: bh, rx: 4, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(v);
+      r.appendChild(t);
+      svg.appendChild(r);
+      var tx = svgEl("text", { x: x + bw / 2, y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
   }
-  renderChart(ptsPoup, ptsDiv, anos);
 
-  // Série da carteira para a imagem do resultado
-  resultData.series = ptsDiv;
-
-  // Composição do patrimônio final
-  renderComposition(pv, totalAportado, crescimento, fvDiv);
-
-  // WhatsApp link with context
-  const msg = encodeURIComponent(
-    'Olá Vitor! Fiz a simulação no seu site. ' +
-    'Tenho ' + state.idade + ' anos, quero me aposentar aos ' + state.aposem + ', ' +
-    'tenho R$ ' + state.patrimonio.toLocaleString('pt-BR') + ' investidos e aporto R$ ' +
-    state.aporte.toLocaleString('pt-BR') + '/mês. ' +
-    'Quero entender as opções para o meu caso.'
-  );
-  document.getElementById('wa-link').href =
-    'https://wa.me/5511997743956?text=' + msg;
-}
-
-// ── GERAÇÃO DA IMAGEM DO RESULTADO ─────────────────────
-function fmtFull(val) {
-  return 'R$ ' + Math.round(val).toLocaleString('pt-BR');
-}
-
-function downloadResultImage() {
-  const btn = document.getElementById('dl-btn');
-  btn.disabled = true;
-  btn.textContent = 'Gerando imagem...';
-
-  // Deixa o browser pintar o estado "gerando" antes do trabalho pesado
-  setTimeout(function() {
-    try { generateAndDownload(); } finally {
-      btn.disabled = false;
-      btn.textContent = '↓ Baixar minha simulação';
+  // line(el, {labels:[], values:[], color?, format?}) — single-series line.
+  function line(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 16, plotH = H - padT - padB;
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 16, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
     }
-  }, 30);
-}
-
-function generateAndDownload() {
-  const canvas = buildResultCanvas();
-  canvas.toBlob(function(blob) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'minha-simulacao-aposentadoria-vitor-souza.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function() { URL.revokeObjectURL(url); }, 1500);
-  }, 'image/png');
-}
-
-function buildResultCanvas() {
-  const W = 1080, H = 1350;
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-
-  const NAVY    = '#0E1632';
-  const NAVY_D  = '#0A1126';
-  const GOLD    = '#B08C30';
-  const GOLD_M  = '#C6A34E';
-  const GOLD_L  = '#E8CD78';
-  const OFFW    = '#F5F2EA';
-  const GRAYW   = 'rgba(245,242,234,0.62)';
-  const GRAYW2  = 'rgba(245,242,234,0.38)';
-
-  // ── Fundo ──
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, NAVY);
-  bg.addColorStop(1, NAVY_D);
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // Filete dourado no topo
-  ctx.fillStyle = GOLD;
-  ctx.fillRect(0, 0, W, 6);
-
-  // ── Tipografia Montserrat (com fallback seguro) ──
-  const F = 'Montserrat, Arial, sans-serif';
-  const weights = [400, 500, 600, 700, 800, 900];
-  ctx.textBaseline = 'alphabetic';
-  weights.forEach(w => { ctx.font = w + ' 12px ' + F; ctx.fillText('.', -50, -50); });
-
-  // ── Cabeçalho ──
-  const title = 'Quanto você poderá construir';
-  const title2 = 'até a aposentadoria?';
-  ctx.textAlign = 'center';
-  ctx.font = '800 44px ' + F;
-  ctx.fillStyle = OFFW;
-  ctx.fillText(title, W / 2, 118);
-  ctx.fillText(title2, W / 2, 172);
-  ctx.font = '800 44px ' + F;
-  ctx.fillStyle = GOLD_M;
-  ctx.fillText('até a aposentadoria?', W / 2, 172);
-
-  const nomeFirst = (state.nome || 'Cliente').trim().split(/\s+/)[0];
-  ctx.font = '600 26px ' + F;
-  ctx.fillStyle = GRAYW;
-  ctx.fillText(nomeFirst + ', esta é a sua projeção', W / 2, 236);
-
-  ctx.fillStyle = GOLD;
-  ctx.fillRect(W / 2 - 27, 268, 54, 4);
-
-  // ── Patrimônio projetado (destaque principal) ──
-  const patText = fmtFull(resultData.fvDiv);
-  const rendaText = fmtFull(resultData.renda) + ' /mês';
-
-  ctx.textAlign = 'center';
-  ctx.font = '800 17px ' + F;
-  ctx.fillStyle = GOLD_M;
-  ctx.fillText('P A T R I M Ô N I O   P R O J E T A D O', W / 2, 356);
-
-  // Ajusta o tamanho da fonte ao comprimento do valor
-  let patSize = 88;
-  ctx.font = '900 ' + patSize + 'px ' + F;
-  while (ctx.measureText(patText).width > W - 160 && patSize > 44) {
-    patSize -= 4;
-    ctx.font = '900 ' + patSize + 'px ' + F;
+    var pts = cfg.values.map(function (v, i) {
+      var x = padL + (n === 1 ? plotW / 2 : (plotW * i) / (n - 1));
+      var y = padT + plotH - (v / max) * plotH;
+      return [x, y];
+    });
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+    svg.appendChild(svgEl("path", { d: d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }));
+    pts.forEach(function (p, i) {
+      var c = svgEl("circle", { cx: p[0], cy: p[1], r: 3.5, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(cfg.values[i]);
+      c.appendChild(t);
+      svg.appendChild(c);
+      var tx = svgEl("text", { x: p[0], y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
   }
-  ctx.fillStyle = OFFW;
-  ctx.fillText(patText, W / 2, 458);
 
-  ctx.font = '600 24px ' + F;
-  ctx.fillStyle = GRAYW;
-  ctx.fillText('em ' + resultData.anos + ' anos de investimento', W / 2, 508);
-
-  // Linha divisória fina
-  ctx.strokeStyle = 'rgba(198,163,78,0.35)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(100, 552);
-  ctx.lineTo(W - 100, 552);
-  ctx.stroke();
-
-  // ── Renda mensal de referência (destaque secundário) ──
-  ctx.font = '800 15px ' + F;
-  ctx.fillStyle = GOLD_M;
-  ctx.fillText('R E N D A   M E N S A L   D E   R E F E R Ê N C I A', W / 2, 606);
-
-  let renSize = 58;
-  ctx.font = '900 ' + renSize + 'px ' + F;
-  while (ctx.measureText(rendaText).width > W - 200 && renSize > 34) {
-    renSize -= 4;
-    ctx.font = '900 ' + renSize + 'px ' + F;
+  // donut(el, {labels:[], values:[], colors?}) — donut with center total.
+  function donut(el, cfg) {
+    var W = 320, H = 280, cx = W / 2, cy = H / 2, R = 92, r = 58;
+    var svg = frame(el, W, H);
+    var total = cfg.values.reduce(function (a, b) { return a + b; }, 0) || 1;
+    var palette = cfg.colors || [accent(), "#1baf7a", "#eda100", "#e34948", "#4a3aa7", "#e87ba4"];
+    var a0 = -Math.PI / 2;
+    cfg.values.forEach(function (v, i) {
+      var a1 = a0 + (v / total) * Math.PI * 2;
+      var large = a1 - a0 > Math.PI ? 1 : 0;
+      var p = ["M", cx + R * Math.cos(a0), cy + R * Math.sin(a0),
+        "A", R, R, 0, large, 1, cx + R * Math.cos(a1), cy + R * Math.sin(a1),
+        "L", cx + r * Math.cos(a1), cy + r * Math.sin(a1),
+        "A", r, r, 0, large, 0, cx + r * Math.cos(a0), cy + r * Math.sin(a0), "Z"].join(" ");
+      var path = svgEl("path", { d: p, fill: palette[i % palette.length] });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + fmt.num(v) + " (" + fmt.pct(v / total) + ")";
+      path.appendChild(t);
+      svg.appendChild(path);
+      a0 = a1;
+    });
+    var center = svgEl("text", { x: cx, y: cy + 5, "text-anchor": "middle", "font-size": 20, "font-weight": 650, fill: "currentColor" });
+    center.textContent = fmt.num(total);
+    svg.appendChild(center);
   }
-  ctx.fillStyle = GOLD_L;
-  ctx.fillText(rendaText, W / 2, 668);
 
-  // ── Grid 2×2: idade, aposentadoria, aporte, tempo ──
-  const cardY = 724, cardH = 118, cardW = (W - 200 - 24) / 2;
-  const cards = [
-    { label: 'IDADE ATUAL',      value: state.idade + ' anos' },
-    { label: 'APOSENTADORIA',    value: 'aos ' + state.aposem + ' anos' },
-    { label: 'APORTE MENSAL',    value: fmtFull(state.aporte) },
-    { label: 'TEMPO DE INVESTIMENTO', value: resultData.anos + ' anos' }
-  ];
+  window.skipShell = { fmt: fmt };
+  window.skipChart = { bar: bar, line: line, donut: donut };
+})();
 
-  cards.forEach(function(c, i) {
-    const col = i % 2, row = Math.floor(i / 2);
-    const cx = 100 + col * (cardW + 24);
-    const cy = cardY + row * (cardH + 20);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.045)';
-    roundRect(ctx, cx, cy, cardW, cardH, 14);
-    ctx.fill();
-
-    ctx.textAlign = 'left';
-    ctx.font = '700 13px ' + F;
-    ctx.fillStyle = GRAYW2;
-    ctx.fillText(c.label, cx + 22, cy + 40);
-
-    let vSize = 30;
-    ctx.font = '800 ' + vSize + 'px ' + F;
-    while (ctx.measureText(c.value).width > cardW - 44 && vSize > 20) {
-      vSize -= 2;
-      ctx.font = '800 ' + vSize + 'px ' + F;
-    }
-    ctx.fillStyle = OFFW;
-    ctx.fillText(c.value, cx + 22, cy + 86);
-  });
-
-  // ── Elemento discreto de evolução patrimonial ──
-  const chartBaseY = 1078, chartLeft = 100, chartRight = W - 100;
-  const pts = resultData.series;
-  const maxV = Math.max.apply(null, pts) || 1;
-
-  ctx.strokeStyle = 'rgba(198,163,78,0.55)';
-  ctx.lineWidth = 3;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  pts.forEach(function(v, i) {
-    const px = chartLeft + (chartRight - chartLeft) * (i / (pts.length - 1));
-    const py = chartBaseY - 70 * (v / maxV);
-    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-  });
-  ctx.stroke();
-
-  // Ponto final em dourado
-  const lastX = chartRight;
-  const lastY = chartBaseY - 70;
-  ctx.fillStyle = GOLD_L;
-  ctx.beginPath();
-  ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(232,205,120,0.3)';
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.arc(lastX, lastY, 12, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // ── Rodapé ──
-  ctx.textAlign = 'center';
-  ctx.font = '700 14px ' + F;
-  ctx.fillStyle = GOLD_M;
-  ctx.fillText('SIMULAÇÃO EDUCATIVA', W / 2, 1140);
-
-  ctx.font = '600 22px ' + F;
-  ctx.fillStyle = OFFW;
-  ctx.fillText('Vitor Souza · Assessor XP Investimentos', W / 2, 1184);
-
-  ctx.font = '600 19px ' + F;
-  ctx.fillStyle = GOLD_M;
-  ctx.fillText('@vitorsouzainvest', W / 2, 1216);
-
-  ctx.font = '400 15px ' + F;
-  ctx.fillStyle = GRAYW2;
-  wrapText(ctx,
-    'Resultado baseado nas hipóteses utilizadas nesta simulação. Não representa garantia de rentabilidade ou de renda futura.',
-    W / 2, 1264, W - 220, 21);
-
-  return canvas;
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
-function wrapText(ctx, text, x, y, maxW, lineH) {
-  const words = text.split(' ');
-  let line = '';
-  const lines = [];
-  words.forEach(function(w) {
-    const test = line ? line + ' ' + w : w;
-    if (ctx.measureText(test).width > maxW && line) {
-      lines.push(line);
-      line = w;
-    } else {
-      line = test;
-    }
-  });
-  lines.push(line);
-  lines.forEach(function(l, i) { ctx.fillText(l, x, y + i * lineH); });
-}
-
-function restart() {
-  document.getElementById('inp-patrimonio').value = '';
-  document.getElementById('inp-aporte').value = '';
-  document.getElementById('inp-nome').value = '';
-  document.getElementById('inp-wpp').value = '';
-  goTo(1);
-}
 </script>
 </body>
 </html>
