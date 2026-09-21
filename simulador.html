@@ -1915,6 +1915,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
       function buildResult() {
         computeAndRenderResults();
+        // Pre-gera o card em segundo plano para o clique baixar sincronamente
+        // (Safari do iOS exige download dentro do gesto do usuario)
+        gerarCardBlob().then(function (blob) { window.__cardBlob = blob; }).catch(function () {});
       }
 
       // STEP 1 LOGIC: updateSliders
@@ -2370,7 +2373,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       }
 
       // FUNÇÃO DE DOWNLOAD DO CARD PNG
-      async function baixarSimulacao() {
+      async function gerarCardBlob() {
         try {
           if (document.fonts && document.fonts.ready) {
             await document.fonts.ready;
@@ -2582,31 +2585,39 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         ctx.fillStyle = '#101426';
         ctx.fillText('@vitorsouzainvest', 540, 1339);
 
-        // Download do card: Blob + objectURL (compatível com iPhone/Safari e Android).
-        // Motivo: <a download> com dataURL é ignorado/aberto no navegador mobile;
-        // blob URL com download é tratado como arquivo em todos os principais.
-        function dispararDownload(blob) {
-          const objUrl = URL.createObjectURL(blob);
-          const downloadLink = document.createElement('a');
-          downloadLink.download = 'minha-simulacao-aposentadoria-vitor-souza.png';
-          downloadLink.href = objUrl;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-          setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
-        }
+        // Gera o arquivo como Blob. O download em si acontece em baixarSimulacao(),
+        // de forma SINCRONA dentro do toque: o Safari do iPhone ignora downloads
+        // iniciados fora do gesto do usuario (ex.: dentro do callback do toBlob).
+        return await new Promise(function (resolve) {
+          if (canvas.toBlob) {
+            canvas.toBlob(function (blob) {
+              resolve(blob || dataURLtoBlob(canvas.toDataURL('image/png')));
+            }, 'image/png');
+          } else {
+            resolve(dataURLtoBlob(canvas.toDataURL('image/png')));
+          }
+        });
+      }
 
-        if (canvas.toBlob) {
-          canvas.toBlob(function (blob) {
-            if (blob) {
-              dispararDownload(blob);
-            } else {
-              dispararDownload(dataURLtoBlob(canvas.toDataURL('image/png')));
-            }
-          }, 'image/png');
-        } else {
-          dispararDownload(dataURLtoBlob(canvas.toDataURL('image/png')));
+      // Dispara o download SINCRONAMENTE (dentro do gesto do usuario)
+      function dispararDownload(blob) {
+        const objUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement('a');
+        downloadLink.download = 'minha-simulacao-aposentadoria-vitor-souza.png';
+        downloadLink.href = objUrl;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
+      }
+
+      // Chamada pelo botao. Card pre-gerado = download sincrono (requisito iOS).
+      function baixarSimulacao() {
+        if (window.__cardBlob) {
+          dispararDownload(window.__cardBlob);
+          return;
         }
+        gerarCardBlob().then(dispararDownload);
       }
 
       // Converte dataURL em Blob (fallback para navegadores sem toBlob)
