@@ -2459,28 +2459,28 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
         // Fundo navy com gradiente vertical
         const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-        bgGrad.addColorStop(0, '#132C58');
-        bgGrad.addColorStop(0.55, '#0A1F44');
-        bgGrad.addColorStop(1, '#071730');
+        bgGrad.addColorStop(0, '#0B2148');
+        bgGrad.addColorStop(0.55, '#081833');
+        bgGrad.addColorStop(1, '#050F22');
         ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, width, height);
 
         // Brilho radial dourado sutil no topo
         const glow = ctx.createRadialGradient(540, 150, 30, 540, 150, 620);
-        glow.addColorStop(0, 'rgba(212, 175, 55, 0.16)');
+        glow.addColorStop(0, 'rgba(240, 199, 94, 0.24)');
         glow.addColorStop(1, 'rgba(212, 175, 55, 0)');
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, width, 850);
 
         // Filete dourado no topo
-        ctx.fillStyle = '#D4AF37';
+        ctx.fillStyle = '#F0C75E';
         ctx.fillRect(0, 0, width, 10);
 
         ctx.textAlign = 'center';
 
         // Tag
         ctx.font = '700 23px Montserrat, sans-serif';
-        ctx.fillStyle = '#D4AF37';
+        ctx.fillStyle = '#F0C75E';
         ctx.fillText('S I M U L A Ç Ã O   D E   A P O S E N T A D O R I A', 540, 122);
 
         // Barra dourada
@@ -2493,7 +2493,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
           nameFontSize -= 2;
           ctx.font = `600 ${nameFontSize}px Montserrat, sans-serif`;
         }
-        ctx.fillStyle = '#E8CD78';
+        ctx.fillStyle = '#F5D982';
         ctx.fillText(firstName, 540, 226);
 
         // Título em 2 linhas
@@ -2508,11 +2508,11 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
         ctx.fill();
         ctx.lineWidth = 1.5;
-        ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+        ctx.strokeStyle = 'rgba(240, 199, 94, 0.6)';
         ctx.stroke();
 
         ctx.font = '700 25px Montserrat, sans-serif';
-        ctx.fillStyle = '#C9D4EA';
+        ctx.fillStyle = '#D7E0F2';
         ctx.fillText('P A T R I M Ô N I O   P R O J E T A D O', 540, cardY + 80);
 
         let fvFontSize = 96;
@@ -2521,7 +2521,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
           fvFontSize -= 2;
           ctx.font = `800 ${fvFontSize}px Montserrat, sans-serif`;
         }
-        ctx.fillStyle = '#E8CD78';
+        ctx.fillStyle = '#F5D982';
         ctx.fillText(fvFormatted, 540, cardY + 202);
 
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
@@ -2532,7 +2532,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         ctx.stroke();
 
         ctx.font = '700 21px Montserrat, sans-serif';
-        ctx.fillStyle = '#C9D4EA';
+        ctx.fillStyle = '#D7E0F2';
         ctx.fillText('RENDA MENSAL DE REFERÊNCIA (0,5% a.m.)', 540, cardY + 284);
 
         let incomeFontSize = 44;
@@ -2555,7 +2555,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
           const bx = startX2 + i * (barW2 + barGap2);
           const by = barsBaseY - bh;
           drawRoundedRect(ctx, bx, by, barW2, bh, 10);
-          ctx.fillStyle = (i === 5) ? '#D4AF37' : `rgba(212, 175, 55, ${(0.22 + i * 0.13).toFixed(2)})`;
+          ctx.fillStyle = (i === 5) ? '#F0C75E' : `rgba(240, 199, 94, ${(0.22 + i * 0.13).toFixed(2)})`;
           ctx.fill();
         }
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
@@ -2566,7 +2566,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         ctx.stroke();
 
         ctx.font = '500 19px Montserrat, sans-serif';
-        ctx.fillStyle = '#8A97B5';
+        ctx.fillStyle = '#9FACC9';
         ctx.fillText('Evolução ilustrativa do patrimônio', 540, 1040);
 
         // Métricas em linha (sem caixas)
@@ -2589,7 +2589,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
             ctx.stroke();
           }
           ctx.font = '700 16px Montserrat, sans-serif';
-          ctx.fillStyle = '#8A97B5';
+          ctx.fillStyle = '#9FACC9';
           ctx.fillText(metrics[i].label, cx, metricsY);
           let vs = 25;
           ctx.font = `700 ${vs}px Montserrat, sans-serif`;
@@ -2604,7 +2604,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         // Disclaimer
         ctx.textAlign = 'center';
         ctx.font = '500 19px Montserrat, sans-serif';
-        ctx.fillStyle = '#8A97B5';
+        ctx.fillStyle = '#9FACC9';
         ctx.fillText('Resultado baseado nas hipóteses utilizadas nesta simulação.', 540, 1186);
         ctx.fillText('Não representa garantia de rentabilidade ou de renda futura.', 540, 1212);
 
@@ -2617,7 +2617,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         ctx.stroke();
 
         ctx.font = '700 20px Montserrat, sans-serif';
-        ctx.fillStyle = '#D4AF37';
+        ctx.fillStyle = '#F0C75E';
         ctx.fillText('S I M U L A Ç Ã O   E D U C A T I V A', 540, 1282);
 
         ctx.font = '600 25px Montserrat, sans-serif';
@@ -2625,7 +2625,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         ctx.fillText('Vitor Souza · Assessor XP Investimentos', 540, 1314);
 
         ctx.font = '700 25px Montserrat, sans-serif';
-        ctx.fillStyle = '#E8CD78';
+        ctx.fillStyle = '#F5D982';
         ctx.fillText('@vitorsouzainvest', 540, 1344);
 
         // Gera o arquivo como Blob. O download em si acontece em baixarSimulacao(),
