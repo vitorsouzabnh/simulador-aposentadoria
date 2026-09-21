@@ -1404,6 +1404,51 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       white-space: normal;
       word-break: break-word;
     }
+    /* Feedback e painel de salvamento (fallback universal de download) */
+    .dl-feedback {
+      min-height: 20px;
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #15803D;
+      font-weight: 600;
+      text-align: center;
+    }
+    .dl-feedback span { text-decoration: underline; cursor: pointer; }
+    .dl-panel {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 20, 40, 0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .dl-panel-box {
+      background: #FFFFFF;
+      border-radius: 18px;
+      padding: 14px;
+      max-width: 340px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      text-align: center;
+    }
+    .dl-panel-title { font-size: 15px; font-weight: 700; color: #101426; margin: 2px 0 10px; }
+    .dl-panel-img { width: 100%; border-radius: 10px; border: 1px solid #E3DFD3; display: block; }
+    .dl-panel-hint { font-size: 12.5px; color: #6B6B7A; margin: 10px 4px; line-height: 1.5; font-weight: 500; }
+    .dl-panel-btn {
+      background: #0A1F44;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 26px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 2px;
+    }
   </style>
 
   <!-- Meta Pixel Code -->
@@ -1745,6 +1790,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
             </svg>
             Baixar minha simulação
           </button>
+          <div class="dl-feedback" id="dlFeedback"></div>
           <div>
             <button type="button" class="btn-redo" id="btnRedoSim">
               ↺ Refazer simulação
@@ -2611,13 +2657,50 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
       }
 
+      // Painel de salvamento: mostra a imagem na tela p/ salvar com toque longo.
+      // Funciona em QUALQUER navegador, inclusive os internos do Instagram/WhatsApp,
+      // que bloqueiam download automatico de Blob.
+      function abrirPainel(blob) {
+        const panel = document.getElementById('dlPanel');
+        const img = document.getElementById('dlPanelImg');
+        if (!panel || !img) return;
+        if (!window.__panelUrl || window.__panelBlob !== blob) {
+          if (window.__panelUrl) { try { URL.revokeObjectURL(window.__panelUrl); } catch (e) {} }
+          window.__panelUrl = URL.createObjectURL(blob);
+          window.__panelBlob = blob;
+          img.src = window.__panelUrl;
+        }
+        panel.style.display = 'flex';
+      }
+
+      function fecharPainel() {
+        const panel = document.getElementById('dlPanel');
+        if (panel) panel.style.display = 'none';
+      }
+
+      function mostrarFallback() {
+        const fb = document.getElementById('dlFeedback');
+        if (!fb) return;
+        fb.innerHTML = 'Não apareceu na galeria? <span id="dlFallbackLink">Toque aqui, segure na imagem e escolha salvar</span>';
+        const link = document.getElementById('dlFallbackLink');
+        if (link) link.addEventListener('click', function () { abrirPainel(window.__cardBlob); });
+      }
+
       // Chamada pelo botao. Card pre-gerado = download sincrono (requisito iOS).
       function baixarSimulacao() {
-        if (window.__cardBlob) {
-          dispararDownload(window.__cardBlob);
-          return;
-        }
-        gerarCardBlob().then(dispararDownload);
+        const tentar = function (blob) {
+          const ehTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+          try {
+            dispararDownload(blob);
+          } catch (e) {}
+          // Em celular, oferece o caminho garantido (painel com toque longo)
+          if (ehTouch) { setTimeout(mostrarFallback, 1200); }
+        };
+        if (window.__cardBlob) { tentar(window.__cardBlob); return; }
+        gerarCardBlob().then(function (blob) {
+          window.__cardBlob = blob;
+          tentar(blob);
+        });
       }
 
       // Converte dataURL em Blob (fallback para navegadores sem toBlob)
@@ -2635,6 +2718,8 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       // Expor para chamada via inline onclick (o botao ja tem onclick no HTML;
       // NAO adicionar addEventListener, causava download duplicado por clique)
       window.baixarSimulacao = baixarSimulacao;
+      window.fecharPainel = fecharPainel;
+      window.abrirPainel = abrirPainel;
 
       // Responsive redraw on window resize if at step 4
       window.addEventListener('resize', () => {
@@ -2794,5 +2879,14 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 })();
 
 </script>
+  <!-- Painel de salvamento (fallback universal p/ navegadores que bloqueiam download de Blob) -->
+  <div class="dl-panel" id="dlPanel" style="display:none">
+    <div class="dl-panel-box">
+      <div class="dl-panel-title">Sua simulação</div>
+      <img id="dlPanelImg" class="dl-panel-img" alt="Card da sua simulação de aposentadoria">
+      <div class="dl-panel-hint">Para salvar: segure o dedo sobre a imagem e escolha <strong>Baixar imagem</strong> (ou Salvar imagem). No iPhone, toque e segure. Você também pode compartilhar a imagem direto daqui.</div>
+      <button type="button" class="dl-panel-btn" onclick="fecharPainel()">Fechar</button>
+    </div>
+  </div>
 </body>
 </html>
