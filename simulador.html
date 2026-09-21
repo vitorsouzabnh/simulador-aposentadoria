@@ -2452,37 +2452,41 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
         const firstName = state.userName ? state.userName.trim().split(' ')[0] : 'Investidor';
 
-        // 1. Recorte do card com cantos arredondados de ~56px
+        // ===== CARD 4:5 premium (identidade navy + dourado do anúncio) =====
+        // Recorte com cantos arredondados
         drawRoundedRect(ctx, 0, 0, width, height, 56);
         ctx.clip();
 
-        // 2. Fundo off-white
-        ctx.fillStyle = '#FAF8F4';
+        // Fundo navy com gradiente vertical
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+        bgGrad.addColorStop(0, '#132C58');
+        bgGrad.addColorStop(0.55, '#0A1F44');
+        bgGrad.addColorStop(1, '#071730');
+        ctx.fillStyle = bgGrad;
         ctx.fillRect(0, 0, width, height);
 
-        // 3. Cabeçalho Navy (0 a 500)
-        ctx.fillStyle = '#101426';
-        ctx.fillRect(0, 0, width, 500);
+        // Brilho radial dourado sutil no topo
+        const glow = ctx.createRadialGradient(540, 150, 30, 540, 150, 620);
+        glow.addColorStop(0, 'rgba(212, 175, 55, 0.16)');
+        glow.addColorStop(1, 'rgba(212, 175, 55, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, width, 850);
 
-        // 4. Rodapé Creme (1222 até o fim)
-        ctx.fillStyle = '#F4F1EA';
-        ctx.fillRect(0, 1222, width, height - 1222);
+        // Filete dourado no topo
+        ctx.fillStyle = '#D4AF37';
+        ctx.fillRect(0, 0, width, 10);
 
-        // === CONTEÚDO DO CABEÇALHO ===
         ctx.textAlign = 'center';
 
-        // Tag "SIMULAÇÃO DE APOSENTADORIA"
-        ctx.font = '700 21px Montserrat, sans-serif';
-        ctx.fillStyle = '#C6A34E';
-        // Espaçamento visual de letras na tag
-        const tagText = 'S I M U L A Ç Ã O   D E   A P O S E N T A D O R I A';
-        ctx.fillText(tagText, 540, 115);
+        // Tag
+        ctx.font = '700 23px Montserrat, sans-serif';
+        ctx.fillStyle = '#D4AF37';
+        ctx.fillText('S I M U L A Ç Ã O   D E   A P O S E N T A D O R I A', 540, 122);
 
-        // Pequena barra decorativa dourada
-        ctx.fillStyle = '#C6A34E';
-        ctx.fillRect(500, 140, 80, 3.5);
+        // Barra dourada
+        ctx.fillRect(498, 146, 84, 3.5);
 
-        // Primeiro nome do usuário em dourado claro
+        // Primeiro nome em dourado claro
         let nameFontSize = 46;
         ctx.font = `600 ${nameFontSize}px Montserrat, sans-serif`;
         while (ctx.measureText(firstName).width > 880 && nameFontSize > 28) {
@@ -2490,148 +2494,139 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
           ctx.font = `600 ${nameFontSize}px Montserrat, sans-serif`;
         }
         ctx.fillStyle = '#E8CD78';
-        ctx.fillText(firstName, 540, 215);
+        ctx.fillText(firstName, 540, 226);
 
-        // Título quebrado em até 2 linhas centralizadas (y ~330 e 414)
+        // Título em 2 linhas
         ctx.font = '800 60px Montserrat, sans-serif';
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText('Quanto você poderá construir', 540, 330);
-        ctx.fillText('até a aposentadoria?', 540, 414);
+        ctx.fillText('até a aposentadoria?', 540, 412);
 
-        // === CONTEÚDO DO CORPO ===
-        // Label "PATRIMÔNIO PROJETADO" cinza ~30px (y ~575)
-        ctx.font = '700 30px Montserrat, sans-serif';
-        ctx.fillStyle = '#6B6B7A';
-        ctx.fillText('PATRIMÔNIO PROJETADO', 540, 575);
+        // Cartão de vidro com o resultado
+        const cardX = 100, cardY = 470, cardW = 880, cardH = 345;
+        drawRoundedRect(ctx, cardX, cardY, cardW, cardH, 28);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
+        ctx.stroke();
 
-        // Valor em navy extrabold ~92px (y ~695) com destaque máximo e adaptação automática
-        let fvFontSize = 92;
+        ctx.font = '700 25px Montserrat, sans-serif';
+        ctx.fillStyle = '#C9D4EA';
+        ctx.fillText('P A T R I M Ô N I O   P R O J E T A D O', 540, cardY + 80);
+
+        let fvFontSize = 96;
         ctx.font = `800 ${fvFontSize}px Montserrat, sans-serif`;
-        while (ctx.measureText(fvFormatted).width > 900 && fvFontSize > 48) {
+        while (ctx.measureText(fvFormatted).width > 780 && fvFontSize > 48) {
           fvFontSize -= 2;
           ctx.font = `800 ${fvFontSize}px Montserrat, sans-serif`;
         }
-        ctx.fillStyle = '#101426';
-        ctx.fillText(fvFormatted, 540, 695);
+        ctx.fillStyle = '#E8CD78';
+        ctx.fillText(fvFormatted, 540, cardY + 202);
 
-        // Label "RENDA MENSAL DE REFERÊNCIA" cinza ~24px (y ~770)
-        ctx.font = '700 24px Montserrat, sans-serif';
-        ctx.fillStyle = '#6B6B7A';
-        ctx.fillText('RENDA MENSAL DE REFERÊNCIA', 540, 770);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cardX + 90, cardY + 242);
+        ctx.lineTo(cardX + cardW - 90, cardY + 242);
+        ctx.stroke();
 
-        // Valor dourado ~46px com "/mês" (y ~830)
-        let incomeFontSize = 46;
+        ctx.font = '700 21px Montserrat, sans-serif';
+        ctx.fillStyle = '#C9D4EA';
+        ctx.fillText('RENDA MENSAL DE REFERÊNCIA (0,5% a.m.)', 540, cardY + 284);
+
+        let incomeFontSize = 44;
         ctx.font = `800 ${incomeFontSize}px Montserrat, sans-serif`;
-        while (ctx.measureText(incomeFormatted).width > 900 && incomeFontSize > 30) {
+        while (ctx.measureText(incomeFormatted).width > 700 && incomeFontSize > 30) {
           incomeFontSize -= 2;
           ctx.font = `800 ${incomeFontSize}px Montserrat, sans-serif`;
         }
-        ctx.fillStyle = '#B08C30';
-        ctx.fillText(incomeFormatted, 540, 830);
-
-        // Nota "referência de 0,5% a.m." pequena (y ~864)
-        ctx.font = '500 20px Montserrat, sans-serif';
-        ctx.fillStyle = '#6B6B7A';
-        ctx.fillText('referência de 0,5% a.m.', 540, 864);
-
-        // Card branco discreto de evolução (y 895-1027, x 120-960, borda cinza clara, cantos 22px)
-        const evoCardX = 120;
-        const evoCardY = 895;
-        const evoCardW = 840;
-        const evoCardH = 132;
-
-        drawRoundedRect(ctx, evoCardX, evoCardY, evoCardW, evoCardH, 22);
         ctx.fillStyle = '#FFFFFF';
-        ctx.fill();
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = '#E3DFD3';
-        ctx.stroke();
+        ctx.fillText(incomeFormatted, 540, cardY + 326);
 
-        // Texto à esquerda dentro do card
-        ctx.textAlign = 'left';
-        ctx.font = '600 22px Montserrat, sans-serif';
-        ctx.fillStyle = '#101426';
-        ctx.fillText('Evolução ilustrativa do patrimônio', evoCardX + 36, evoCardY + 74);
-
-        // 6 barras verticais arredondadas ascendentes à direita do card
-        const barHeights = [24, 38, 52, 68, 84, 100];
-        const barWidth = 16;
-        const barGap = 16;
-        const totalBarsWidth = (6 * barWidth) + (5 * barGap);
-        const barsStartX = evoCardX + evoCardW - 40 - totalBarsWidth;
-        const barsBaseY = evoCardY + evoCardH - 16;
-
+        // Evolução ilustrativa: barras douradas ascendentes
+        const barsBaseY = 1002;
+        const barH2 = [34, 52, 72, 94, 118, 144];
+        const barW2 = 26, barGap2 = 30;
+        const totalW2 = 6 * barW2 + 5 * barGap2;
+        const startX2 = 540 - totalW2 / 2;
         for (let i = 0; i < 6; i++) {
-          const bh = barHeights[i];
-          const bx = barsStartX + i * (barWidth + barGap);
+          const bh = barH2[i];
+          const bx = startX2 + i * (barW2 + barGap2);
           const by = barsBaseY - bh;
-          const isLast = (i === 5);
-
-          drawRoundedRect(ctx, bx, by, barWidth, bh, 8);
-          ctx.fillStyle = isLast ? '#B08C30' : '#E8CD78';
+          drawRoundedRect(ctx, bx, by, barW2, bh, 10);
+          ctx.fillStyle = (i === 5) ? '#D4AF37' : `rgba(212, 175, 55, ${(0.22 + i * 0.13).toFixed(2)})`;
           ctx.fill();
         }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(startX2 - 18, barsBaseY);
+        ctx.lineTo(startX2 + totalW2 + 18, barsBaseY);
+        ctx.stroke();
 
-        // Grade de 4 caixas (y ~1052, altura ~100, x 120-960, 3 espaços de 28px)
-        // Largura total 840 -> (840 - 3 * 28) / 4 = 189px cada caixa
-        const boxY = 1052;
-        const boxH = 100;
-        const boxW = 189;
-        const boxGap = 28;
+        ctx.font = '500 19px Montserrat, sans-serif';
+        ctx.fillStyle = '#8A97B5';
+        ctx.fillText('Evolução ilustrativa do patrimônio', 540, 1040);
 
-        const boxesData = [
-          { label: 'Idade atual', val: `${state.currentAge} anos` },
-          { label: 'Aposentadoria', val: `${state.retireAge} anos` },
-          { label: 'Aporte mensal', val: pmtFormatted },
-          { label: 'Tempo invest.', val: `${years} anos` }
+        // Métricas em linha (sem caixas)
+        const metricsY = 1112;
+        const metrics = [
+          { label: 'IDADE ATUAL', val: `${state.currentAge} anos` },
+          { label: 'APOSENTADORIA', val: `${state.retireAge} anos` },
+          { label: 'APORTE MENSAL', val: pmtFormatted },
+          { label: 'TEMPO', val: `${years} anos` }
         ];
-
-        boxesData.forEach((box, i) => {
-          const bx = 120 + i * (boxW + boxGap);
-
-          drawRoundedRect(ctx, bx, boxY, boxW, boxH, 16);
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fill();
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = '#E3DFD3';
-          ctx.stroke();
-
-          ctx.textAlign = 'center';
-          // Rótulo pequeno cinza
-          ctx.font = '600 17px Montserrat, sans-serif';
-          ctx.fillStyle = '#6B6B7A';
-          ctx.fillText(box.label, bx + boxW / 2, boxY + 38);
-
-          // Valor navy bold com medição para não cortar
-          let valSize = 22;
-          ctx.font = `700 ${valSize}px Montserrat, sans-serif`;
-          while (ctx.measureText(box.val).width > (boxW - 16) && valSize > 14) {
-            valSize -= 1;
-            ctx.font = `700 ${valSize}px Montserrat, sans-serif`;
+        const colW = 880 / 4;
+        for (let i = 0; i < 4; i++) {
+          const cx = 100 + colW * i + colW / 2;
+          if (i > 0) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(100 + colW * i, metricsY - 26);
+            ctx.lineTo(100 + colW * i, metricsY + 16);
+            ctx.stroke();
           }
-          ctx.fillStyle = '#101426';
-          ctx.fillText(box.val, bx + boxW / 2, boxY + 76);
-        });
+          ctx.font = '700 16px Montserrat, sans-serif';
+          ctx.fillStyle = '#8A97B5';
+          ctx.fillText(metrics[i].label, cx, metricsY);
+          let vs = 25;
+          ctx.font = `700 ${vs}px Montserrat, sans-serif`;
+          while (ctx.measureText(metrics[i].val).width > (colW - 20) && vs > 14) {
+            vs -= 1;
+            ctx.font = `700 ${vs}px Montserrat, sans-serif`;
+          }
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(metrics[i].val, cx, metricsY + 34);
+        }
 
-        // Observação pequena centralizada em cinza (~19px, até 2 linhas, y ~1184)
+        // Disclaimer
         ctx.textAlign = 'center';
         ctx.font = '500 19px Montserrat, sans-serif';
-        ctx.fillStyle = '#6B6B7A';
-        ctx.fillText('Resultado baseado nas hipóteses utilizadas nesta simulação.', 540, 1176);
-        ctx.fillText('Não representa garantia de rentabilidade ou de renda futura.', 540, 1202);
+        ctx.fillStyle = '#8A97B5';
+        ctx.fillText('Resultado baseado nas hipóteses utilizadas nesta simulação.', 540, 1186);
+        ctx.fillText('Não representa garantia de rentabilidade ou de renda futura.', 540, 1212);
 
-        // Rodapé creme
-        ctx.font = '700 22px Montserrat, sans-serif';
-        ctx.fillStyle = '#B08C30';
-        ctx.fillText('S I M U L A Ç Ã O   E D U C A T I V A', 540, 1266);
+        // Rodapé
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(440, 1248);
+        ctx.lineTo(640, 1248);
+        ctx.stroke();
 
-        ctx.font = '600 27px Montserrat, sans-serif';
-        ctx.fillStyle = '#101426';
-        ctx.fillText('Vitor Souza · Assessor XP Investimentos', 540, 1304);
+        ctx.font = '700 20px Montserrat, sans-serif';
+        ctx.fillStyle = '#D4AF37';
+        ctx.fillText('S I M U L A Ç Ã O   E D U C A T I V A', 540, 1282);
 
-        ctx.font = '700 27px Montserrat, sans-serif';
-        ctx.fillStyle = '#101426';
-        ctx.fillText('@vitorsouzainvest', 540, 1339);
+        ctx.font = '600 25px Montserrat, sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('Vitor Souza · Assessor XP Investimentos', 540, 1314);
+
+        ctx.font = '700 25px Montserrat, sans-serif';
+        ctx.fillStyle = '#E8CD78';
+        ctx.fillText('@vitorsouzainvest', 540, 1344);
 
         // Gera o arquivo como Blob. O download em si acontece em baixarSimulacao(),
         // de forma SINCRONA dentro do toque: o Safari do iPhone ignora downloads
