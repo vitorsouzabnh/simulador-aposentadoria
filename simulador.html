@@ -1405,6 +1405,29 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       word-break: break-word;
     }
   </style>
+
+  <!-- ============================================================
+       META PIXEL - INSTALAR QUANDO O PIXEL FOR CRIADO (PARTE 2)
+       1. Crie o pixel no Gerenciador de Eventos da Meta.
+       2. Substitua SEU_PIXEL_ID abaixo pelo ID real.
+       3. Descomente o bloco (retire as marcas de comentario das linhas extremas).
+       4. Publique e valide no Pixel Helper / Test Events.
+       O evento Lead já está implementado no fluxo de envio do lead.
+       ============================================================
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', 'SEU_PIXEL_ID');
+    fbq('track', 'PageView');
+  </script>
+  ============================================================ -->
+
 </head>
 <body>
 
@@ -1746,6 +1769,13 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // UTM: captura da origem do trafego (Instagram organico vs pago vs outros)
+      const UTM_PARAMS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','gclid'];
+      const UTM = {};
+      try {
+        const sp = new URLSearchParams(window.location.search);
+        UTM_PARAMS.forEach(k => { const v = sp.get(k); if (v) UTM[k] = v; });
+      } catch(e) {}
       // STATE
       const state = {
         currentAge: 35,
@@ -2068,13 +2098,23 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
 
           // Envio de lead ao Google Apps Script
           try {
+            // Trava anti-duplicidade: 1 lead por conclusao de cadastro
+            if (window.__leadEnviado) return;
+            window.__leadEnviado = true;
+
             const payload = {
               nome: state.nome,
               wpp: state.wpp,
               idade: state.idade,
               aposem: state.aposem,
               patrimonio: state.patrimonio,
-              aporte: state.aporte
+              aporte: state.aporte,
+              utm_source: UTM['utm_source'] || null,
+              utm_medium: UTM['utm_medium'] || null,
+              utm_campaign: UTM['utm_campaign'] || null,
+              utm_content: UTM['utm_content'] || null,
+              utm_term: UTM['utm_term'] || null,
+              fbclid: UTM['fbclid'] || null
             };
 
             fetch('https://script.google.com/macros/s/AKfycbw00iwTzcmMASktImklpfm695Np6dM5p4fSconrH4VYwAT7Zx8NYwsD_hJSuotXfF58yQ/exec', {
@@ -2085,6 +2125,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
               },
               body: JSON.stringify(payload)
             }).catch(() => {});
+
+            // Evento Lead: dispara UMA vez, apos o cadastro ser concluido
+            if (typeof fbq === 'function') { try { fbq('track', 'Lead'); } catch(e) {} }
           } catch (e) {
             // Silencioso para assegurar navegação contínua
           }
