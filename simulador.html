@@ -2582,21 +2582,48 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
         ctx.fillStyle = '#101426';
         ctx.fillText('@vitorsouzainvest', 540, 1339);
 
-        // Download automático via <a download>
-        const dataUrl = canvas.toDataURL('image/png');
-        const downloadLink = document.createElement('a');
-        downloadLink.download = 'minha-simulacao-aposentadoria-vitor-souza.png';
-        downloadLink.href = dataUrl;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+        // Download do card: Blob + objectURL (compatível com iPhone/Safari e Android).
+        // Motivo: <a download> com dataURL é ignorado/aberto no navegador mobile;
+        // blob URL com download é tratado como arquivo em todos os principais.
+        function dispararDownload(blob) {
+          const objUrl = URL.createObjectURL(blob);
+          const downloadLink = document.createElement('a');
+          downloadLink.download = 'minha-simulacao-aposentadoria-vitor-souza.png';
+          downloadLink.href = objUrl;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
+        }
+
+        if (canvas.toBlob) {
+          canvas.toBlob(function (blob) {
+            if (blob) {
+              dispararDownload(blob);
+            } else {
+              dispararDownload(dataURLtoBlob(canvas.toDataURL('image/png')));
+            }
+          }, 'image/png');
+        } else {
+          dispararDownload(dataURLtoBlob(canvas.toDataURL('image/png')));
+        }
       }
 
-      // Expor para chamada via inline onclick ou listener
-      window.baixarSimulacao = baixarSimulacao;
-      if (btnDownloadCard) {
-        btnDownloadCard.addEventListener('click', baixarSimulacao);
+      // Converte dataURL em Blob (fallback para navegadores sem toBlob)
+      function dataURLtoBlob(dataUrl) {
+        const parts = dataUrl.split(',');
+        const mime = parts[0].match(/:(.*?);/)[1];
+        const binStr = atob(parts[1]);
+        const arr = new Uint8Array(binStr.length);
+        for (let i = 0; i < binStr.length; i++) {
+          arr[i] = binStr.charCodeAt(i);
+        }
+        return new Blob([arr], { type: mime });
       }
+
+      // Expor para chamada via inline onclick (o botao ja tem onclick no HTML;
+      // NAO adicionar addEventListener, causava download duplicado por clique)
+      window.baixarSimulacao = baixarSimulacao;
 
       // Responsive redraw on window resize if at step 4
       window.addEventListener('resize', () => {
