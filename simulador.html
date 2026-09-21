@@ -1449,6 +1449,8 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       cursor: pointer;
       margin-top: 2px;
     }
+    .dl-panel-btn.save { background: #15803D; margin-right: 8px; }
+    .dl-panel-btnrow { margin-top: 4px; }
   </style>
 
   <!-- Meta Pixel Code -->
@@ -2663,12 +2665,35 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
       function abrirPainel(blob) {
         const panel = document.getElementById('dlPanel');
         const img = document.getElementById('dlPanelImg');
+        const saveBtn = document.getElementById('dlPanelSave');
         if (!panel || !img) return;
-        if (!window.__panelUrl || window.__panelBlob !== blob) {
-          if (window.__panelUrl) { try { URL.revokeObjectURL(window.__panelUrl); } catch (e) {} }
-          window.__panelUrl = URL.createObjectURL(blob);
+        // dataURL (e nao blob:) no src: webviews como o navegador interno do
+        // Instagram nao oferecem "salvar imagem" no toque longo de blob:,
+        // mas oferecem para dataURL
+        if (window.__panelBlob !== blob || !window.__panelDataUrl) {
           window.__panelBlob = blob;
-          img.src = window.__panelUrl;
+          const reader = new FileReader();
+          reader.onload = function () {
+            window.__panelDataUrl = reader.result;
+            img.src = window.__panelDataUrl;
+          };
+          reader.readAsDataURL(blob);
+          // Botao nativo do Android (share sheet com "Salvar na galeria")
+          if (saveBtn) {
+            try {
+              const file = new File([blob], 'minha-simulacao-aposentadoria-vitor-souza.png', { type: blob.type || 'image/png' });
+              if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                saveBtn.style.display = 'inline-block';
+                saveBtn.onclick = function () {
+                  navigator.share({ files: [file], title: 'Minha simulação de aposentadoria' }).catch(function () {});
+                };
+              } else {
+                saveBtn.style.display = 'none';
+              }
+            } catch (e) { if (saveBtn) saveBtn.style.display = 'none'; }
+          }
+        } else {
+          img.src = window.__panelDataUrl;
         }
         panel.style.display = 'flex';
       }
@@ -2884,8 +2909,12 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
     <div class="dl-panel-box">
       <div class="dl-panel-title">Sua simulação</div>
       <img id="dlPanelImg" class="dl-panel-img" alt="Card da sua simulação de aposentadoria">
-      <div class="dl-panel-hint">Para salvar: segure o dedo sobre a imagem e escolha <strong>Baixar imagem</strong> (ou Salvar imagem). No iPhone, toque e segure. Você também pode compartilhar a imagem direto daqui.</div>
-      <button type="button" class="dl-panel-btn" onclick="fecharPainel()">Fechar</button>
+      <div class="dl-panel-hint">Para salvar: segure o dedo sobre a imagem e escolha <strong>Baixar imagem</strong> (ou Salvar imagem).</div>
+      <div class="dl-panel-btnrow">
+        <button type="button" class="dl-panel-btn save" id="dlPanelSave" style="display:none">Salvar / Compartilhar</button>
+        <button type="button" class="dl-panel-btn" onclick="fecharPainel()">Fechar</button>
+      </div>
+      <div class="dl-panel-hint" style="margin-top:8px">Se nada funcionar: toque no menu <strong>⋮</strong> do navegador e escolha <strong>Abrir no Chrome</strong> (navegador externo). Lá o botão de baixar funciona direto.</div>
     </div>
   </div>
 </body>
