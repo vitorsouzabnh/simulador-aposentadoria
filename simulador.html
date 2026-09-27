@@ -2152,6 +2152,7 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
             const payload = {
               nome: state.nome,
               wpp: state.wpp,
+              tipo: 'aposentadoria',
               idade: state.idade,
               aposem: state.aposem,
               patrimonio: state.patrimonio,
@@ -2164,12 +2165,9 @@ table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 
               fbclid: UTM['fbclid'] || null
             };
 
-            fetch('https://script.google.com/macros/s/AKfycbw00iwTzcmMASktImklpfm695Np6dM5p4fSconrH4VYwAT7Zx8NYwsD_hJSuotXfF58yQ/exec', {
+            fetch('https://maestro.adapta.one/webhooks/generic/7fbefdeaee5d2fa4dbe192c4e219271e25fb5c9daad59b215746ac5e14b8f973', {
               method: 'POST',
-              mode: 'no-cors',
-              headers: {
-                'Content-Type': 'application/json'
-              },
+              headers: { 'Content-Type': 'text/plain', 'X-Webhook-Secret': 'vitor-simuladores-2026' },
               body: JSON.stringify(payload)
             }).catch(() => {});
 

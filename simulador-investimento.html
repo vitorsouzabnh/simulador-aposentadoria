@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Investimento · Vitor Souza</title>
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="icon-32.png" type="image/png" sizes="32x32">
+
+  <!-- Google Fonts: Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
+
+  <!-- Basecoat CSS & System Shell -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/basecoat.cdn.min.css">
+  <style>
+:root {
+  color-scheme: light dark;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --accent-text: color-mix(in srgb, var(--accent) 72%, #000);
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --text: #14171f;
+  --text-muted: #5b6472;
+  --border: rgba(20, 23, 31, 0.10);
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(20, 23, 31, 0.08);
+  --space: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+    --bg: #101318;
+    --surface: #181c23;
+    --text: #eef1f6;
+    --text-muted: #9aa4b2;
+    --border: rgba(238, 241, 246, 0.12);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+:root:where([data-theme="dark"]) {
+  color-scheme: dark;
+  --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+  --bg: #101318;
+  --surface: #181c23;
+  --text: #eef1f6;
+  --text-muted: #9aa4b2;
+  --border: rgba(238, 241, 246, 0.12);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+:root:where([data-theme="light"]) { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+</style>
+
+  <style>
+    :root {
+      --navy: #101426;
+      --navy-light: #1A213D;
+      --gold: #B08C30;
+      --gold-deep: #8A6D20;
+      --gold-hover: #967425;
+      --gold-soft: #F6EEDC;
+      --gold-mid: #C6A34E;
+      --gold-light: #E8CD78;
+      --cream-bg: #FAF8F4;
+      --cream-card: #F4F1EA;
+      --surface-card: #FFFFFF;
+      --green-ref: #15803D;
+      --green-light: #DCFCE7;
+      --line: #E3DFD3;
+      --line-soft: #E8E4DA;
+      --border-color: var(--line);
+      --border-hover: #C9C4B4;
+      --placeholder-color: #A9A49A;
+      --text-main: #101426;
+      --text-muted: #6B6B7A;
+      --text-sub: #5C5C6E;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-card: 24px;
+      --accent: var(--gold);
+      --accent-contrast: #FFFFFF;
+      --accent-text: var(--gold-deep);
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--cream-bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 24px 16px 48px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .app-wrapper {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Page Header */
+    .advisor-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .advisor-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      background: rgba(16, 20, 38, 0.06);
+      padding: 5px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.3px;
+    }
+
+    .advisor-pill .xp-tag {
+      color: var(--gold);
+      font-weight: 800;
+    }
+
+    .free-tag {
+      display: inline-flex;
+      align-items: center;
+      background: #FEF3C7;
+      color: #92400E;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: clamp(24px, 4vw, 32px);
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.25;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Card Container */
+    .simulator-card {
+      background: var(--surface-card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-card);
+      box-shadow: 0 6px 48px rgba(16, 20, 38, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Step Indicator */
+    .steps-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px;
+      background: var(--cream-card);
+      border-bottom: 1px solid var(--line);
+      gap: 8px;
+    }
+
+    .step-item, .step-dot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      position: relative;
+      padding-bottom: 4px;
+    }
+
+    .step-item.active::after,
+    .step-dot.active::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 25%;
+      right: 25%;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 999px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--line);
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .step-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      transition: color 0.2s ease;
+    }
+
+    .step-item.active .step-num, .step-dot.active .step-num {
+      background: var(--navy);
+      color: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(16, 20, 38, 0.15);
+    }
+
+    .step-item.active .step-label, .step-dot.active .step-label {
+      color: var(--navy);
+      font-weight: 700;
+    }
+
+    .step-item.completed .step-num, .step-dot.completed .step-num {
+      background: var(--gold);
+      color: #FFFFFF;
+    }
+
+    .step-item.completed .step-label, .step-dot.completed .step-label {
+      color: var(--navy);
+    }
+
+    @media (max-width: 580px) {
+      .steps-nav {
+        padding: 14px 16px;
+      }
+      .step-label {
+        display: none;
+      }
+      .step-item {
+        justify-content: center;
+      }
+    }
+
+    /* Step Contents */
+    .step-content {
+      display: none;
+      padding: 44px 44px 38px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .step-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 580px) {
+      .step-content {
+        padding: 30px 24px;
+      }
+    }
+
+    .step-heading, .step-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0 0 8px 0;
+      letter-spacing: -0.3px;
+    }
+
+    .step-desc, .step-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin: 0 0 32px 0;
+    }
+
+    /* ETAPA 1: Sliders em Cards */
+    .slider-card {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 26px 28px 22px;
+      margin-bottom: 18px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .slider-card:focus-within {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 4px rgba(176, 140, 48, 0.10);
+    }
+
+    .slider-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+
+    .slider-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .field-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .slider-val {
+      font-size: 34px;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .slider-val span {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    /* Range Sliders */
+    .range-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--line);
+      outline: none;
+      margin: 12px 0 6px 0;
+    }
+
+    .range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--navy);
+      border: 3px solid var(--gold);
+      box-shadow: 0 2px 8px rgba(16, 20, 38, 0.25);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+
+    .range-input::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      background: var(--gold);
+      border-color: #FFFFFF;
+    }
+
+    .range-input::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--navy);
+      border: 3px solid var(--gold);
+      box-shadow: 0 2px 8px rgba(16, 20, 38, 0.25);
+      cursor: pointer;
+    }
+
+    .range-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* ETAPA 2: Inputs com Grupo Flexbox */
+    .field, .input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      margin-bottom: 24px;
+      position: static;
+    }
+
+    .field > label, .input-group > label,
+    .field > .input-label, .input-group > .input-label {
+      order: 1;
+      display: block;
+      white-space: normal;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.5;
+      margin-bottom: 8px;
+      position: static;
+    }
+
+    .field label span, .input-label span, .field-desc span {
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    .input-prefix,
+    .currency-input-wrap {
+      order: 2;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: #FFFFFF;
+      border: 1.5px solid #E3DFD3;
+      border-radius: 12px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      box-sizing: border-box;
+      position: static;
+    }
+
+    .input-prefix:hover,
+    .currency-input-wrap:hover {
+      border-color: #C9C4B4;
+    }
+
+    .input-prefix:focus-within,
+    .currency-input-wrap:focus-within {
+      border-color: #B08C30;
+      box-shadow: 0 0 0 4px rgba(176, 140, 48, 0.10);
+    }
+
+    .input-prefix.error,
+    .currency-input-wrap.error {
+      border-color: #C0392B !important;
+      box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.08) !important;
+    }
+
+    .input-prefix span,
+    .currency-input-wrap span.input-prefix-label {
+      display: inline-block;
+      position: static;
+      transform: none;
+      flex-shrink: 0;
+      padding-left: 20px;
+      padding-right: 6px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #8A6D20;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .input-prefix input,
+    .input-prefix input[type="text"],
+    .input-prefix input[type="number"],
+    .currency-input-wrap input {
+      flex: 1;
+      min-width: 0;
+      display: block;
+      padding: 16px 20px 16px 4px !important;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: #101426;
+      outline: none;
+      -webkit-appearance: none;
+      -moz-appearance: textfield;
+      appearance: none;
+      margin: 0;
+      position: static;
+    }
+
+    .input-prefix input::-webkit-outer-spin-button,
+    .input-prefix input::-webkit-inner-spin-button,
+    .currency-input-wrap input::-webkit-outer-spin-button,
+    .currency-input-wrap input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .input-prefix input::placeholder,
+    .currency-input-wrap input::placeholder {
+      color: #A9A49A;
+      opacity: 1;
+    }
+
+    .styled-input.no-prefix,
+    .field input.no-prefix,
+    .input-group input.no-prefix {
+      order: 2;
+      display: block;
+      width: 100%;
+      padding: 16px 20px;
+      border: 1.5px solid #E3DFD3;
+      border-radius: 12px;
+      background-color: #FFFFFF;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: #101426;
+      outline: none;
+      box-sizing: border-box;
+      position: static;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .styled-input.no-prefix::placeholder,
+    .field input.no-prefix::placeholder,
+    .input-group input.no-prefix::placeholder {
+      color: #A9A49A;
+      opacity: 1;
+    }
+
+    .styled-input.no-prefix:hover,
+    .field input.no-prefix:hover,
+    .input-group input.no-prefix:hover {
+      border-color: #C9C4B4;
+    }
+
+    .styled-input.no-prefix:focus,
+    .field input.no-prefix:focus,
+    .input-group input.no-prefix:focus {
+      outline: none;
+      background-color: #FFFFFF;
+      border-color: #B08C30;
+      box-shadow: 0 0 0 4px rgba(176, 140, 48, 0.10);
+    }
+
+    .styled-input.no-prefix.error,
+    .field input.no-prefix.error,
+    .input-group input.no-prefix.error {
+      border-color: #C0392B !important;
+      background-color: #FFFFFF !important;
+      box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.08) !important;
+    }
+
+    .field > .hint, .input-group > .hint,
+    .field > .input-hint-small, .input-group > .input-hint-small {
+      order: 3;
+    }
+
+    .field > .err-msg, .input-group > .err-msg,
+    .field > .input-error-msg, .input-group > .input-error-msg {
+      order: 4;
+    }
+
+    .field .hint, .field .err-msg,
+    .input-group .hint, .input-group .err-msg,
+    .input-hint-small, .input-error-msg {
+      display: flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      line-height: 1.5;
+      width: 100%;
+      box-sizing: border-box;
+      position: static;
+    }
+
+    .field .hint, .input-group .hint, .input-hint-small {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .field .err-msg, .input-group .err-msg, .input-error-msg {
+      display: none;
+      color: #C0392B;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .field .err-msg.show, .field .err-msg.visible,
+    .input-group .err-msg.show, .input-group .err-msg.visible,
+    .input-error-msg.show, .input-error-msg.visible {
+      display: flex;
+    }
+
+    .field .hint span, .field .err-msg span,
+    .input-group .hint span, .input-group .err-msg span,
+    .input-hint-small span, .input-error-msg span {
+      flex: 1 1 auto;
+      min-width: 0;
+      word-break: break-word;
+      color: inherit;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .field .hint svg, .field .err-msg svg,
+    .input-group .hint svg, .input-group .err-msg svg,
+    .hint-icon, .err-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .hint-icon {
+      color: var(--text-sub);
+    }
+
+    .err-icon {
+      color: #C0392B;
+    }
+
+    /* Step 3 Highlight Box */
+    .advisor-callout-box, .lead-intro {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .advisor-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(16, 20, 38, 0.15);
+    }
+
+    .advisor-callout-text {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--navy);
+      font-weight: 500;
+    }
+
+    .advisor-callout-text strong, .lead-intro strong {
+      color: var(--gold-deep);
+      font-weight: 700;
+    }
+
+    .privacy-notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    /* Button Actions */
+    .btn-row, .actions-row {
+      display: flex;
+      flex-direction: row;
+      gap: 14px;
+      margin-top: 32px;
+      width: 100%;
+    }
+
+    .btn, .btn-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 52px;
+      padding: 0 24px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      box-sizing: border-box;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .btn-primary-navy {
+      background: var(--navy);
+      color: #FFFFFF;
+      flex: 1;
+      box-shadow: 0 4px 14px rgba(16, 20, 38, 0.16);
+    }
+
+    .btn-primary-navy:hover {
+      background: var(--gold);
+      color: var(--navy);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(176, 140, 48, 0.28);
+    }
+
+    .btn-primary-gold {
+      background: var(--gold);
+      color: #FFFFFF;
+      flex: 1;
+    }
+
+    .btn-primary-gold:hover {
+      background: var(--gold-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(176, 140, 48, 0.3);
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--navy);
+      border: 1.5px solid var(--navy);
+      padding: 0 20px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(16, 20, 38, 0.06);
+      border-color: var(--navy);
+    }
+
+    /* STEP 4: RESULT STYLING */
+    .result-navy-banner {
+      background: var(--navy);
+      color: #FFFFFF;
+      margin: -44px -44px 30px -44px;
+      padding: 34px 44px;
+      position: relative;
+    }
+
+    @media (max-width: 580px) {
+      .result-navy-banner {
+        margin: -30px -24px 24px -24px;
+        padding: 28px 24px;
+      }
+    }
+
+    .result-badge {
+      display: inline-block;
+      background: rgba(176, 140, 48, 0.25);
+      border: 1px solid rgba(176, 140, 48, 0.5);
+      color: #F8D988;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .result-greeting {
+      font-size: 14px;
+      color: #C2CADB;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .result-headline {
+      font-size: clamp(18px, 3.2vw, 24px);
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .result-headline .highlight-gold {
+      color: #E2B755;
+    }
+
+    /* Result KPI Cards */
+    .result-main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-main-card, .metric {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      padding: 20px 18px;
+      text-align: center;
+    }
+
+    .kpi-main-card.gold-border {
+      border-color: rgba(176, 140, 48, 0.5);
+      background: #FAF6EE;
+    }
+
+    .kpi-main-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .kpi-main-val {
+      font-size: clamp(20px, 3.6vw, 26px);
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .kpi-main-sub {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold-deep);
+    }
+
+    /* Three smaller cards */
+    .result-triplet-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-mini-card, .metric-mini {
+      background: #FFFFFF;
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+
+    .kpi-mini-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-mini-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    @media (max-width: 520px) {
+      .btn-row, .actions-row {
+        flex-wrap: wrap;
+      }
+      .btn, .btn-action {
+        flex: 1 1 100%;
+        width: 100%;
+      }
+      .result-main-grid {
+        grid-template-columns: 1fr;
+      }
+      .result-triplet-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Chart Card */
+    .chart-section {
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .section-title, .comparison-title {
+      color: var(--gold-deep);
+      font-weight: 700;
+    }
+
+    .section-title-sm {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0 0 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .chart-svg-wrap {
+      width: 100%;
+      height: 220px;
+      position: relative;
+    }
+
+    .chart-svg-wrap svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Segmented Bar (Composition) */
+    .composition-section, .composition {
+      background: var(--cream-card);
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      margin-bottom: 22px;
+    }
+
+    .seg-bar-track {
+      height: 20px;
+      border-radius: 10px;
+      background: var(--line-soft);
+      display: flex;
+      overflow: hidden;
+      margin: 12px 0 14px 0;
+    }
+
+    .seg-bar-fill {
+      height: 100%;
+      transition: width 0.5s ease-out;
+    }
+
+    .seg-navy { background: var(--navy); }
+    .seg-gold { background: var(--gold); }
+    .seg-green { background: var(--green-ref); }
+
+    .composition-legend-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .comp-col {
+      font-size: 11px;
+    }
+
+    .comp-title {
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 2px;
+    }
+
+    .comp-value {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    @media (max-width: 520px) {
+      .composition-legend-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    /* Strategy Comparison Table / Box */
+    .strategy-compare-box, .comparison {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .strat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #FFFFFF;
+      font-size: 13px;
+    }
+
+    .strat-row:last-child {
+      border-bottom: none;
+    }
+
+    .strat-row.highlight-ref {
+      background: #F0FDF4;
+    }
+
+    .strat-name {
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .strat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 1px;
+    }
+
+    .strat-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .strat-diff-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #DCFCE7;
+      color: #166534;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    /* Final CTA */
+    .final-cta-card {
+      background: linear-gradient(135deg, #101426 0%, #1A213D 100%);
+      border-radius: var(--radius-md);
+      padding: 24px 22px;
+      text-align: center;
+      color: #FFFFFF;
+    }
+
+    .disclaimer-lead {
+      font-size: 12px;
+      color: #CAD5E8;
+      line-height: 1.55;
+      margin: 0 0 14px 0;
+    }
+
+    .cta-hook {
+      font-size: 15px;
+      font-weight: 700;
+      color: #E2B755;
+      line-height: 1.4;
+      margin: 0 0 18px 0;
+    }
+
+    .cta-btn-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: var(--gold);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(176, 140, 48, 0.4);
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .cta-btn-whatsapp:hover {
+      background: var(--gold-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-download-img {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      background: transparent;
+      color: #F8D988;
+      border: 1.5px solid rgba(226, 183, 85, 0.45);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      margin-top: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .btn-download-img:hover {
+      background: rgba(226, 183, 85, 0.12);
+      border-color: #E2B755;
+      color: #FFFFFF;
+      transform: translateY(-1px);
+    }
+
+    .btn-download-img:active {
+      transform: translateY(0);
+    }
+
+    .btn-redo {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      margin-top: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-redo:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Footer */
+    .app-footer, footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 580px;
+    }
+
+    .app-footer strong, footer strong, .advisor-meta strong {
+      color: var(--gold-deep);
+      font-weight: 700;
+    }
+
+    .advisor-meta {
+      font-weight: 600;
+      color: var(--navy);
+      margin-top: 6px;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: #FFFFFF;
+        padding: 0;
+      }
+      .steps-nav, .actions-row, .btn-redo, .cta-btn-whatsapp {
+        display: none !important;
+      }
+      .simulator-card {
+        border: none;
+        box-shadow: none;
+      }
+      .step-content {
+        display: none;
+      }
+      #step4 {
+        display: block !important;
+      }
+    }
+
+    /* ============================================================
+       FIX DE SOBREPOSIÇÃO — neutraliza conflitos com o Basecoat CSS
+       ============================================================ */
+    .input-group.field,
+    .field.input-group {
+      height: auto !important;
+      min-height: 0 !important;
+      position: static !important;
+      align-items: stretch !important;
+      flex-direction: column !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      margin: 0 0 24px 0 !important;
+      padding: 0 !important;
+      gap: 0 !important;
+    }
+
+    .input-group.field > label,
+    .field.input-group > label {
+      order: 1 !important;
+      width: 100% !important;
+      display: block !important;
+      margin: 0 0 8px 0 !important;
+      line-height: 1.5 !important;
+      white-space: normal !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+    }
+
+    .input-group.field > .input-prefix,
+    .input-group.field > .currency-input-wrap,
+    .input-group.field > input.styled-input {
+      order: 2 !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 58px !important;
+      flex: none !important;
+    }
+
+    .input-group.field > .hint,
+    .input-group.field > .input-hint-small {
+      order: 3 !important;
+    }
+
+    .input-group.field > .err-msg,
+    .input-group.field > .input-error-msg {
+      order: 4 !important;
+    }
+
+    .input-group.field > .hint,
+    .input-group.field > .err-msg {
+      height: auto !important;
+      margin-top: 8px !important;
+      overflow: visible !important;
+    }
+
+    .field input.no-prefix,
+    .input-group input.no-prefix {
+      height: auto !important;
+      min-height: 58px !important;
+    }
+
+    .step-content .input-group.field .input-label {
+      position: static !important;
+      transform: none !important;
+    }
+
+    .result-navy-banner {
+      position: relative;
+      z-index: 0;
+    }
+    .steps-nav {
+      position: relative;
+      z-index: 2;
+      background: var(--cream-card);
+    }
+
+    .section-title-sm {
+      flex-wrap: wrap;
+    }
+    .chart-legend {
+      flex-wrap: wrap;
+      row-gap: 4px;
+    }
+
+    .strat-row {
+      gap: 12px;
+    }
+    .strat-val {
+      text-align: right;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    /* ETAPA 2: Cards de perfil */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 520px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .profile-card {
+      background: var(--cream-card);
+      border: 1.5px solid var(--line-soft);
+      border-radius: 14px;
+      padding: 18px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      user-select: none;
+    }
+
+    .profile-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .profile-card.selected {
+      border-color: var(--gold);
+      background: #FAF6EE;
+      box-shadow: 0 0 0 4px rgba(176, 140, 48, 0.10);
+    }
+
+    .profile-icon {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .profile-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 2px;
+    }
+
+    .profile-rate {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold-deep);
+      margin-bottom: 6px;
+    }
+
+    .profile-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .profile-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <!-- Top badge row -->
+    <div class="advisor-badge-row">
+      <div class="advisor-pill">
+        <span>Vitor Souza</span>
+        <span>•</span>
+        <span class="xp-tag">InvestSmart | XP</span>
+      </div>
+      <span class="free-tag">Ferramenta gratuita</span>
+    </div>
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <h1 class="page-title">Quanto rende R$ 1 milhão investido?</h1>
+      <p class="page-subtitle">Simule o rendimento do seu capital e descubra quanto ele poderia gerar por mês</p>
+    </header>
+
+    <!-- Main Simulator Card -->
+    <main class="simulator-card" id="simCard">
+
+      <!-- Progress Bar Nav (4 Steps) -->
+      <nav class="steps-nav" aria-label="Progresso da simulação">
+        <div class="step-item active" id="stepIndicator1">
+          <span class="step-num">1</span>
+          <span class="step-label">Seu capital</span>
+        </div>
+        <div class="step-item" id="stepIndicator2">
+          <span class="step-num">2</span>
+          <span class="step-label">Prazo e perfil</span>
+        </div>
+        <div class="step-item" id="stepIndicator3">
+          <span class="step-num">3</span>
+          <span class="step-label">Seus dados</span>
+        </div>
+        <div class="step-item" id="stepIndicator4">
+          <span class="step-num">4</span>
+          <span class="step-label">Resultado</span>
+        </div>
+      </nav>
+
+      <!-- ETAPA 1: CAPITAL -->
+      <section class="step-content active" id="step1" aria-labelledby="step1Title">
+        <h2 class="step-heading step-title" id="step1Title">Quanto você tem para investir?</h2>
+        <p class="step-desc step-sub">Ajuste o valor para ver quanto ele poderia render por mês.</p>
+
+        <!-- Slider A: Capital -->
+        <div class="slider-card">
+          <div class="slider-card-top">
+            <div>
+              <label for="capitalInput" class="slider-label">Valor a investir</label>
+              <div class="field-desc">Capital disponível hoje</div>
+            </div>
+            <div class="slider-val" id="capitalDisplay">R$ 1.000.000</div>
+          </div>
+          <input type="range" class="range-input" id="capitalInput" min="50000" max="10000000" step="50000" value="1000000" aria-label="Valor a investir">
+          <div class="range-ticks">
+            <span>R$ 50 mil</span>
+            <span>R$ 5 mi</span>
+            <span>R$ 10 mi</span>
+          </div>
+        </div>
+
+        <!-- Input B: Aporte mensal adicional -->
+        <div class="input-group field">
+          <label for="monthlyInput" class="input-label">Aporte mensal adicional <span>(opcional)</span></label>
+          <div class="input-prefix currency-input-wrap">
+            <span class="input-prefix-label">R$</span>
+            <input type="text" inputmode="numeric" class="styled-input" id="monthlyInput" placeholder="0" value="0">
+          </div>
+          <div class="input-error-msg err-msg" id="errorMonthly">
+            <svg class="err-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>Aporte inválido. Insira um valor entre R$ 0 e R$ 1.000.000.</span>
+          </div>
+          <div class="input-hint-small hint">
+            <svg class="hint-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>Valor entre R$ 0 e R$ 1.000.000</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-row">
+          <button type="button" class="btn-action btn-primary-navy" id="btnGoStep2">
+            Continuar →
+          </button>
+        </div>
+      </section>
+
+      <!-- ETAPA 2: PRAZO E PERFIL -->
+      <section class="step-content" id="step2" aria-labelledby="step2Title">
+        <h2 class="step-heading step-title" id="step2Title">Por quanto tempo e com qual estratégia?</h2>
+        <p class="step-desc step-sub">O prazo e o perfil definem a hipótese de rentabilidade da simulação.</p>
+
+        <!-- Slider: Prazo -->
+        <div class="slider-card">
+          <div class="slider-card-top">
+            <div>
+              <label for="yearsInput" class="slider-label">Prazo do investimento</label>
+              <div class="field-desc">Tempo que o capital ficará investido</div>
+            </div>
+            <div class="slider-val" id="yearsDisplay">10 <span>anos</span></div>
+          </div>
+          <input type="range" class="range-input" id="yearsInput" min="1" max="20" value="10" aria-label="Prazo do investimento em anos">
+          <div class="range-ticks">
+            <span>1 ano</span>
+            <span>10 anos</span>
+            <span>20 anos</span>
+          </div>
+        </div>
+
+        <!-- Perfil -->
+        <label class="slider-label" style="margin-bottom: 10px;">Perfil de investimento</label>
+        <div class="profile-grid" role="radiogroup" aria-label="Perfil de investimento">
+          <div class="profile-card" id="profileConservador" role="radio" aria-checked="false" tabindex="0">
+            <div class="profile-icon">🛡️</div>
+            <div class="profile-name">Conservador</div>
+            <div class="profile-rate">hipótese de 9% a.a.</div>
+            <div class="profile-desc">Prioriza preservação e liquidez</div>
+          </div>
+          <div class="profile-card selected" id="profileModerado" role="radio" aria-checked="true" tabindex="0">
+            <div class="profile-icon">⚖️</div>
+            <div class="profile-name">Moderado</div>
+            <div class="profile-rate">hipótese de 11% a.a.</div>
+            <div class="profile-desc">Equilibra risco e retorno</div>
+          </div>
+          <div class="profile-card" id="profileArrojado" role="radio" aria-checked="false" tabindex="0">
+            <div class="profile-icon">🚀</div>
+            <div class="profile-name">Arrojado</div>
+            <div class="profile-rate">hipótese de 13% a.a.</div>
+            <div class="profile-desc">Aceita mais risco por mais retorno</div>
+          </div>
+        </div>
+        <p class="profile-note">As rentabilidades são hipóteses ilustrativas para fins educativos. Não representam promessa nem projeção de resultado.</p>
+
+        <!-- Actions -->
+        <div class="actions-row">
+          <button type="button" class="btn-action btn-secondary" id="btnBackTo1">← Voltar</button>
+          <button type="button" class="btn-action btn-primary-navy" id="btnGoStep3">Continuar →</button>
+        </div>
+      </section>
+
+      <!-- ETAPA 3: SEUS DADOS (LEAD) -->
+      <section class="step-content" id="step3" aria-labelledby="step3Title">
+        <h2 class="step-heading" id="step3Title">Para quem preparamos a simulação?</h2>
+        <p class="step-desc">Preencha seus dados para liberar a projeção detalhada e os comparativos.</p>
+
+        <!-- Highlight Callout Box -->
+        <div class="advisor-callout-box">
+          <div class="advisor-avatar" aria-hidden="true">VS</div>
+          <div class="advisor-callout-text">
+            Vitor vai analisar sua simulação e pode entrar em contato para conversar sobre alternativas para o seu caso — sem compromisso.
+          </div>
+        </div>
+
+        <!-- Name Input -->
+        <div class="input-group field">
+          <label for="userNameInput" class="input-label">Seu nome</label>
+          <input type="text" class="styled-input no-prefix" id="userNameInput" placeholder="Ex: Roberto Silva" autocomplete="name">
+          <div class="input-error-msg err-msg" id="errorName">Por favor, preencha seu nome completo.</div>
+        </div>
+
+        <!-- Phone Input -->
+        <div class="input-group field">
+          <label for="userPhoneInput" class="input-label">WhatsApp <span>(com DDD)</span></label>
+          <input type="tel" class="styled-input no-prefix" id="userPhoneInput" placeholder="(11) 99999-9999" maxlength="15" autocomplete="tel">
+          <div class="input-error-msg err-msg" id="errorPhone">Insira um número de WhatsApp válido com DDD (mínimo 10 dígitos).</div>
+        </div>
+
+        <div class="privacy-notice">
+          <span>🔒 Seus dados são usados apenas para contato. Não há spam.</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-row">
+          <button type="button" class="btn-action btn-secondary" id="btnBackTo2">← Voltar</button>
+          <button type="button" class="btn-action btn-primary-gold" id="btnGoStep4">Ver meu resultado →</button>
+        </div>
+      </section>
+
+      <!-- ETAPA 4: RESULTADO -->
+      <section class="step-content" id="step4" aria-labelledby="step4Title">
+
+        <!-- Header Navy -->
+        <div class="result-navy-banner">
+          <span class="result-badge">Sua simulação</span>
+          <div class="result-greeting" id="resGreeting">Roberto, aqui está sua simulação:</div>
+          <h2 class="result-headline" id="resHeadline">
+            Neste cenário, seu capital poderia gerar cerca de <span class="highlight-gold" id="resHeadlineVal">R$ 0/mês</span> já no primeiro mês.
+          </h2>
+        </div>
+
+        <!-- 1. Dois cards principais -->
+        <div class="result-main-grid">
+          <div class="kpi-main-card gold-border">
+            <div class="kpi-main-label">Renda mensal estimada</div>
+            <div class="kpi-main-val" id="resCardIncome">R$ 0/mês</div>
+            <div class="kpi-main-sub" id="resCardIncomeSub">no primeiro mês · cenário moderado</div>
+          </div>
+          <div class="kpi-main-card">
+            <div class="kpi-main-label">Patrimônio projetado</div>
+            <div class="kpi-main-val" id="resCardFV">R$ 0</div>
+            <div class="kpi-main-sub" id="resCardYearsSub">em 10 anos</div>
+          </div>
+        </div>
+
+        <!-- 2. Três cards menores -->
+        <div class="result-triplet-grid">
+          <div class="kpi-mini-card">
+            <div class="kpi-mini-label">Total aportado</div>
+            <div class="kpi-mini-val" id="resCardTotalDeposits">R$ 0</div>
+          </div>
+          <div class="kpi-mini-card">
+            <div class="kpi-mini-label">Crescimento estimado</div>
+            <div class="kpi-mini-val" id="resCardInterest" style="color: var(--green-ref)">R$ 0</div>
+          </div>
+          <div class="kpi-mini-card">
+            <div class="kpi-mini-label">Renda anual estimada</div>
+            <div class="kpi-mini-val" id="resCardYearIncome">R$ 0</div>
+          </div>
+        </div>
+
+        <!-- 3. Gráfico de Evolução SVG -->
+        <div class="chart-section">
+          <div class="section-title-sm">
+            <span>Evolução do Patrimônio</span>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-dot" style="background: var(--green-ref)"></span> Seu cenário</span>
+              <span class="legend-item"><span class="legend-dot" style="background: var(--gold)"></span> Poupança (6% a.a.)</span>
+            </div>
+          </div>
+          <div class="chart-svg-wrap" id="chartContainer">
+            <!-- Inline SVG rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 4. Composição do Patrimônio Final -->
+        <div class="composition-section">
+          <div class="section-title-sm">
+            <span>Composição do Patrimônio Final</span>
+            <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;" id="compScenarioTag">Cenário moderado</span>
+          </div>
+
+          <div class="seg-bar-track" id="segBarTrack" role="progressbar" aria-label="Composição do Patrimônio">
+            <div class="seg-bar-fill seg-navy" id="segInitialBar" style="width: 10%;"></div>
+            <div class="seg-bar-fill seg-gold" id="segDepositsBar" style="width: 40%;"></div>
+            <div class="seg-bar-fill seg-green" id="segInterestBar" style="width: 50%;"></div>
+          </div>
+
+          <div class="composition-legend-grid">
+            <div class="comp-col">
+              <div class="comp-title">
+                <span class="legend-dot" style="background: var(--navy);"></span>
+                Capital inicial
+              </div>
+              <div class="comp-value" id="compValInitial">R$ 0</div>
+            </div>
+            <div class="comp-col">
+              <div class="comp-title">
+                <span class="legend-dot" style="background: var(--gold);"></span>
+                Total de aportes
+              </div>
+              <div class="comp-value" id="compValDeposits">R$ 0</div>
+            </div>
+            <div class="comp-col">
+              <div class="comp-title">
+                <span class="legend-dot" style="background: var(--green-ref);"></span>
+                Crescimento estimado
+              </div>
+              <div class="comp-value" id="compValInterest" style="color: var(--green-ref);">R$ 0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Comparativo de Estratégia -->
+        <div class="strategy-compare-box">
+          <div class="strat-row">
+            <div>
+              <span class="strat-name">Poupança</span>
+              <span class="strat-sub">Hipótese de 6% a.a.</span>
+            </div>
+            <div class="strat-val" id="stratValPoupanca">R$ 0/mês</div>
+          </div>
+          <div class="strat-row">
+            <div>
+              <span class="strat-name">Renda fixa (CDI)</span>
+              <span class="strat-sub">Hipótese de 10% a.a.</span>
+            </div>
+            <div class="strat-val" id="stratValCdi">R$ 0/mês</div>
+          </div>
+          <div class="strat-row highlight-ref">
+            <div>
+              <span class="strat-name" style="color: var(--green-ref);" id="stratNameRef">Seu cenário</span>
+              <span class="strat-sub" id="stratSubRef">Hipótese de 11% a.a.</span>
+            </div>
+            <div class="strat-val" style="color: var(--green-ref);" id="stratValRef">R$ 0/mês</div>
+          </div>
+          <div class="strat-row" style="background: #FAF8F4;">
+            <div>
+              <span class="strat-name">Diferença estimada</span>
+              <span class="strat-sub">Vantagem sobre a poupança</span>
+            </div>
+            <div>
+              <span class="strat-diff-badge" id="stratValDiff">+ R$ 0/mês</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. CTA Final -->
+        <div class="final-cta-card">
+          <p class="disclaimer-lead">
+            Esta é uma projeção hipotética, baseada em hipóteses ilustrativas. O resultado real depende das decisões, das condições de mercado e da estratégia escolhida para o seu perfil.
+          </p>
+          <p class="cta-hook">Vitor pode montar isso com você. Sem custo.</p>
+          <a href="#" target="_blank" rel="noopener noreferrer" class="cta-btn-whatsapp" id="btnWhatsappCTA">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            Falar com Vitor sobre minha estratégia
+          </a>
+          <button type="button" class="btn-download-img" id="btnDownloadCard" onclick="baixarSimulacao()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Baixar minha simulação
+          </button>
+          <div>
+            <button type="button" class="btn-redo" id="btnRedoSim">
+              ↺ Refazer simulação
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Page Footer -->
+    <footer class="app-footer">
+      <p>Simulação com fins educativos. Rentabilidades passadas não garantem resultados futuros.</p>
+      <div class="advisor-meta">Vitor Souza · Assessor XP Investimentos · @vitorsouzainvest</div>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // STATE
+      const state = {
+        capital: 1000000,
+        monthly: 0,
+        years: 10,
+        profile: 'moderado',
+        userName: '',
+        userPhone: '',
+        currentStep: 1
+      };
+
+      const PROFILES = {
+        conservador: { name: 'Conservador', rate: 0.09, icon: '🛡️' },
+        moderado:    { name: 'Moderado',    rate: 0.11 },
+        arrojado:    { name: 'Arrojado',    rate: 0.13 }
+      };
+      const POUPANCA_RATE = 0.06;
+      const CDI_RATE = 0.10;
+
+      // DOM ELEMENTS
+      const stepIndicators = [
+        document.getElementById('stepIndicator1'),
+        document.getElementById('stepIndicator2'),
+        document.getElementById('stepIndicator3'),
+        document.getElementById('stepIndicator4')
+      ];
+      const stepViews = [
+        document.getElementById('step1'),
+        document.getElementById('step2'),
+        document.getElementById('step3'),
+        document.getElementById('step4')
+      ];
+
+      const capitalInput = document.getElementById('capitalInput');
+      const capitalDisplay = document.getElementById('capitalDisplay');
+      const monthlyInput = document.getElementById('monthlyInput');
+      const errorMonthly = document.getElementById('errorMonthly');
+      const yearsInput = document.getElementById('yearsInput');
+      const yearsDisplay = document.getElementById('yearsDisplay');
+      const profileCards = {
+        conservador: document.getElementById('profileConservador'),
+        moderado: document.getElementById('profileModerado'),
+        arrojado: document.getElementById('profileArrojado')
+      };
+      const userNameInput = document.getElementById('userNameInput');
+      const userPhoneInput = document.getElementById('userPhoneInput');
+      const errorName = document.getElementById('errorName');
+      const errorPhone = document.getElementById('errorPhone');
+
+      const resGreeting = document.getElementById('resGreeting');
+      const resHeadlineVal = document.getElementById('resHeadlineVal');
+      const resCardIncome = document.getElementById('resCardIncome');
+      const resCardIncomeSub = document.getElementById('resCardIncomeSub');
+      const resCardFV = document.getElementById('resCardFV');
+      const resCardYearsSub = document.getElementById('resCardYearsSub');
+      const resCardTotalDeposits = document.getElementById('resCardTotalDeposits');
+      const resCardInterest = document.getElementById('resCardInterest');
+      const resCardYearIncome = document.getElementById('resCardYearIncome');
+      const chartContainer = document.getElementById('chartContainer');
+      const segInitialBar = document.getElementById('segInitialBar');
+      const segDepositsBar = document.getElementById('segDepositsBar');
+      const segInterestBar = document.getElementById('segInterestBar');
+      const compValInitial = document.getElementById('compValInitial');
+      const compValDeposits = document.getElementById('compValDeposits');
+      const compValInterest = document.getElementById('compValInterest');
+      const compScenarioTag = document.getElementById('compScenarioTag');
+      const stratValPoupanca = document.getElementById('stratValPoupanca');
+      const stratValCdi = document.getElementById('stratValCdi');
+      const stratNameRef = document.getElementById('stratNameRef');
+      const stratSubRef = document.getElementById('stratSubRef');
+      const stratValRef = document.getElementById('stratValRef');
+      const stratValDiff = document.getElementById('stratValDiff');
+      const btnWhatsappCTA = document.getElementById('btnWhatsappCTA');
+
+      // FORMATTERS
+      const fmtBRL = (val) => new Intl.NumberFormat('pt-BR', {
+        style: 'currency', currency: 'BRL', maximumFractionDigits: 0
+      }).format(Math.round(val));
+
+      const fmtNumberClean = (val) => new Intl.NumberFormat('pt-BR', {
+        maximumFractionDigits: 0
+      }).format(Math.round(val));
+
+      const parseBRLString = (str) => {
+        if (!str) return 0;
+        const cleaned = str.toString().replace(/\D/g, '');
+        return cleaned ? parseInt(cleaned, 10) : 0;
+      };
+
+      // STEP NAVIGATION
+      function goToStep(step) {
+        state.currentStep = step;
+        stepViews.forEach((view, index) => {
+          view.classList.toggle('active', index + 1 === step);
+        });
+        stepIndicators.forEach((ind, index) => {
+          const stepNum = index + 1;
+          ind.classList.remove('active', 'completed');
+          if (stepNum === step) ind.classList.add('active');
+          else if (stepNum < step) ind.classList.add('completed');
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (step === 4) computeAndRenderResults();
+      }
+
+      // STEP 1 LOGIC
+      function updateCapital() {
+        state.capital = parseInt(capitalInput.value, 10);
+        capitalDisplay.textContent = fmtBRL(state.capital);
+      }
+      capitalInput.addEventListener('input', updateCapital);
+      updateCapital();
+
+      function setFieldError(inputOrId, errOrId, hasError) {
+        const input = typeof inputOrId === 'string' ? document.getElementById(inputOrId) : inputOrId;
+        const err = typeof errOrId === 'string' ? document.getElementById(errOrId) : errOrId;
+        if (!input) return;
+        const prefixContainer = input.closest('.input-prefix');
+        if (prefixContainer) prefixContainer.classList.toggle('error', hasError);
+        input.classList.toggle('error', hasError);
+        if (err) {
+          err.classList.toggle('show', hasError);
+          err.classList.toggle('visible', hasError);
+        }
+      }
+
+      monthlyInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (val === '') {
+          e.target.value = '';
+        } else {
+          e.target.value = fmtNumberClean(parseBRLString(val));
+        }
+        setFieldError(monthlyInput, errorMonthly, false);
+      });
+
+      document.getElementById('btnGoStep2').addEventListener('click', () => goToStep(2));
+
+      // STEP 2 LOGIC
+      function updateYears() {
+        state.years = parseInt(yearsInput.value, 10);
+        yearsDisplay.innerHTML = `${state.years} <span>${state.years === 1 ? 'ano' : 'anos'}</span>`;
+      }
+      yearsInput.addEventListener('input', updateYears);
+      updateYears();
+
+      function selectProfile(key) {
+        state.profile = key;
+        Object.entries(profileCards).forEach(([k, card]) => {
+          card.classList.toggle('selected', k === key);
+          card.setAttribute('aria-checked', k === key ? 'true' : 'false');
+        });
+      }
+      Object.entries(profileCards).forEach(([k, card]) => {
+        card.addEventListener('click', () => selectProfile(k));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectProfile(k);
+          }
+        });
+      });
+
+      document.getElementById('btnBackTo1').addEventListener('click', () => goToStep(1));
+      document.getElementById('btnGoStep3').addEventListener('click', () => {
+        const rawMonthly = monthlyInput.value.trim();
+        let isValid = true;
+        if (rawMonthly === '') {
+          setFieldError(monthlyInput, errorMonthly, true);
+          isValid = false;
+        } else {
+          const monthlyVal = parseBRLString(rawMonthly);
+          if (monthlyVal < 0 || monthlyVal > 1000000) {
+            setFieldError(monthlyInput, errorMonthly, true);
+            isValid = false;
+          } else {
+            setFieldError(monthlyInput, errorMonthly, false);
+          }
+        }
+        if (isValid) {
+          state.monthly = parseBRLString(rawMonthly);
+          goToStep(3);
+        }
+      });
+
+      // STEP 3 LOGIC
+      function maskPhone(val) {
+        let digits = val.replace(/\D/g, '');
+        if (digits.length > 11) digits = digits.slice(0, 11);
+        if (digits.length <= 2) return digits ? `(${digits}` : '';
+        if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+        if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+      }
+
+      userNameInput.addEventListener('input', () => {
+        if (userNameInput.value.trim()) setFieldError(userNameInput, errorName, false);
+      });
+
+      userPhoneInput.addEventListener('input', (e) => {
+        e.target.value = maskPhone(e.target.value);
+        if (e.target.value.replace(/\D/g, '').length >= 10) {
+          setFieldError(userPhoneInput, errorPhone, false);
+        }
+      });
+
+      document.getElementById('btnBackTo2').addEventListener('click', () => goToStep(2));
+
+      function validateStep3() {
+        let isValid = true;
+        const nameVal = userNameInput.value.trim();
+        const digits = userPhoneInput.value.replace(/\D/g, '');
+
+        if (!nameVal) {
+          setFieldError(userNameInput, errorName, true);
+          isValid = false;
+        } else {
+          setFieldError(userNameInput, errorName, false);
+        }
+
+        if (digits.length < 10) {
+          setFieldError(userPhoneInput, errorPhone, true);
+          isValid = false;
+        } else {
+          setFieldError(userPhoneInput, errorPhone, false);
+        }
+
+        if (isValid) {
+          state.userName = nameVal;
+          state.userPhone = userPhoneInput.value;
+          goToStep(4);
+
+          // Envio do lead ao Maestro (webhook -> CRM Notion + e-mail)
+          try {
+            const params = new URLSearchParams(window.location.search);
+            const payload = {
+              nome: state.userName,
+              wpp: state.userPhone,
+              tipo: 'investimento',
+              capital: state.capital,
+              aporte: state.monthly,
+              prazo: state.years,
+              perfil: state.profile,
+              utm_source: params.get('utm_source') || '',
+              utm_medium: params.get('utm_medium') || '',
+              utm_campaign: params.get('utm_campaign') || '',
+              utm_content: params.get('utm_content') || '',
+              utm_term: params.get('utm_term') || '',
+              utm_id: params.get('utm_id') || '',
+              ts: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+            };
+            fetch('https://maestro.adapta.one/webhooks/generic/7fbefdeaee5d2fa4dbe192c4e219271e25fb5c9daad59b215746ac5e14b8f973', {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain', 'X-Webhook-Secret': 'vitor-simuladores-2026' },
+              body: JSON.stringify(payload)
+            }).catch(() => {});
+          } catch (e) {
+            // Silencioso para assegurar navegação contínua
+          }
+        }
+      }
+
+      document.getElementById('btnGoStep4').addEventListener('click', validateStep3);
+
+      // CALCULATION LOGIC
+      function monthlyRate(annualRate) {
+        return Math.pow(1 + annualRate, 1 / 12) - 1;
+      }
+
+      function futureValue(pv, pmt, rMonthly, months) {
+        if (months <= 0) return pv;
+        const fvPV = pv * Math.pow(1 + rMonthly, months);
+        const fvPMT = pmt * ((Math.pow(1 + rMonthly, months) - 1) / rMonthly);
+        return fvPV + fvPMT;
+      }
+
+      function buildChart(seriesRef, seriesPoupanca, years) {
+        const W = 600, H = 220, PAD_L = 8, PAD_R = 8, PAD_T = 12, PAD_B = 24;
+        const maxVal = Math.max(...seriesRef, ...seriesPoupanca, 1);
+        const n = seriesRef.length - 1;
+        const x = (i) => PAD_L + (i / n) * (W - PAD_L - PAD_R);
+        const y = (v) => PAD_T + (1 - v / maxVal) * (H - PAD_T - PAD_B);
+        const line = (series) => series.map((v, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+        const area = `${line(seriesRef)} L ${x(n).toFixed(1)} ${y(0).toFixed(1)} L ${x(0).toFixed(1)} ${y(0).toFixed(1)} Z`;
+        const labelEvery = Math.max(1, Math.round(n / 4));
+        const xLabels = [];
+        for (let i = 0; i <= n; i += labelEvery) {
+          xLabels.push(`<text x="${x(i).toFixed(1)}" y="${H - 6}" font-size="10" fill="#6B6B7A" text-anchor="middle">${i === 0 ? 'hoje' : i + (i === 1 ? ' ano' : ' anos')}</text>`);
+        }
+        chartContainer.innerHTML = `
+          <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Evolução do patrimônio">
+            <defs>
+              <linearGradient id="chartAreaGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#B08C30" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="#B08C30" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="${area}" fill="url(#chartAreaGold)"></path>
+            <path d="${line(seriesPoupanca)}" fill="none" stroke="#B08C30" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 0"></path>
+            <path d="${line(seriesRef)}" fill="none" stroke="#15803D" stroke-width="3" stroke-linecap="round"></path>
+            ${xLabels.join('')}
+          </svg>`;
+      }
+
+      function computeAndRenderResults() {
+        const profile = PROFILES[state.profile];
+        const rRef = monthlyRate(profile.rate);
+        const rPoupanca = monthlyRate(POUPANCA_RATE);
+        const rCdi = monthlyRate(CDI_RATE);
+        const months = state.years * 12;
+
+        // Renda mensal estimada no primeiro mês (juros do capital inicial)
+        const incomeFirstMonth = state.capital * rRef;
+        const incomePoupanca = state.capital * rPoupanca;
+        const incomeCdi = state.capital * rCdi;
+
+        // Patrimônio projetado
+        const fvRef = futureValue(state.capital, state.monthly, rRef, months);
+        const totalDeposits = state.capital + state.monthly * months;
+        const growth = Math.max(0, fvRef - totalDeposits);
+
+        // Greeting
+        const firstName = state.userName.trim().split(/\s+/)[0];
+        resGreeting.textContent = `${firstName}, aqui está sua simulação:`;
+        resHeadlineVal.textContent = `${fmtBRL(incomeFirstMonth)}/mês`;
+
+        // KPI mains
+        resCardIncome.textContent = `${fmtBRL(incomeFirstMonth)}/mês`;
+        resCardIncomeSub.textContent = `no primeiro mês · cenário ${profile.name.toLowerCase()}`;
+        resCardFV.textContent = fmtBRL(fvRef);
+        resCardYearsSub.textContent = `em ${state.years} ${state.years === 1 ? 'ano' : 'anos'}`;
+
+        // KPI minis
+        resCardTotalDeposits.textContent = fmtBRL(totalDeposits);
+        resCardInterest.textContent = fmtBRL(growth);
+        resCardYearIncome.textContent = fmtBRL(incomeFirstMonth * 12);
+
+        // Chart series (pontos anuais)
+        const seriesRef = [];
+        const seriesPoupanca = [];
+        const steps = Math.min(state.years, 20);
+        for (let i = 0; i <= steps; i++) {
+          const m = (i * state.years / steps) * 12;
+          seriesRef.push(futureValue(state.capital, state.monthly, rRef, m));
+          seriesPoupanca.push(futureValue(state.capital, state.monthly, rPoupanca, m));
+        }
+        buildChart(seriesRef, seriesPoupanca, state.years);
+
+        // Composition
+        const total = Math.max(fvRef, 1);
+        segInitialBar.style.width = `${(state.capital / total * 100).toFixed(1)}%`;
+        segDepositsBar.style.width = `${(state.monthly * months / total * 100).toFixed(1)}%`;
+        segInterestBar.style.width = `${(growth / total * 100).toFixed(1)}%`;
+        compValInitial.textContent = fmtBRL(state.capital);
+        compValDeposits.textContent = fmtBRL(state.monthly * months);
+        compValInterest.textContent = fmtBRL(growth);
+        compScenarioTag.textContent = `Cenário ${profile.name.toLowerCase()}`;
+
+        // Comparison
+        stratValPoupanca.textContent = `${fmtBRL(incomePoupanca)}/mês`;
+        stratValCdi.textContent = `${fmtBRL(incomeCdi)}/mês`;
+        stratNameRef.textContent = `Seu cenário (${profile.name.toLowerCase()})`;
+        stratSubRef.textContent = `Hipótese de ${Math.round(profile.rate * 100)}% a.a.`;
+        stratValRef.textContent = `${fmtBRL(incomeFirstMonth)}/mês`;
+        stratValDiff.textContent = `+ ${fmtBRL(incomeFirstMonth - incomePoupanca)}/mês`;
+
+        // WhatsApp CTA com contexto da simulação
+        const msg = encodeURIComponent(
+          `Olá, Vitor! Fiz a simulação de investimento no site:\n` +
+          `• Capital: ${fmtBRL(state.capital)}\n` +
+          `• Aporte mensal: ${fmtBRL(state.monthly)}\n` +
+          `• Prazo: ${state.years} ${state.years === 1 ? 'ano' : 'anos'}\n` +
+          `• Perfil: ${profile.name} (hipótese ${Math.round(profile.rate * 100)}% a.a.)\n` +
+          `• Renda mensal estimada: ${fmtBRL(incomeFirstMonth)}\n` +
+          `Quero conversar sobre minha estratégia.`
+        );
+        btnWhatsappCTA.href = `https://wa.me/5511997743956?text=${msg}`;
+      }
+
+      // DOWNLOAD DA SIMULAÇÃO (compartilhável)
+      window.baixarSimulacao = function() {
+        if (state.currentStep !== 4) return;
+        const profile = PROFILES[state.profile];
+        const rRef = monthlyRate(profile.rate);
+        const income = state.capital * rRef;
+        const months = state.years * 12;
+        const fv = futureValue(state.capital, state.monthly, rRef, months);
+        const text =
+`SIMULAÇÃO DE INVESTIMENTO — Vitor Souza · InvestSmart | XP
+-----------------------------------------------------------
+Capital inicial: ${fmtBRL(state.capital)}
+Aporte mensal: ${fmtBRL(state.monthly)}
+Prazo: ${state.years} ${state.years === 1 ? 'ano' : 'anos'}
+Perfil: ${profile.name} (hipótese ${Math.round(profile.rate * 100)}% a.a.)
+-----------------------------------------------------------
+Renda mensal estimada (1º mês): ${fmtBRL(income)}
+Patrimônio projetado: ${fmtBRL(fv)}
+-----------------------------------------------------------
+Simulação com fins educativos, baseada em hipóteses ilustrativas.
+Rentabilidades passadas não garantem resultados futuros.
+Vitor Souza · Assessor XP Investimentos · @vitorsouzainvest`;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'simulacao-investimento-vitor-souza.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      // REDO
+      document.getElementById('btnRedoSim').addEventListener('click', () => {
+        goToStep(1);
+      });
+    });
+  </script>
+</body>
+</html>
