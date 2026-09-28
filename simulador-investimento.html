@@ -2102,38 +2102,241 @@ img { max-width: 100%; display: block; }
         btnWhatsappCTA.href = `https://wa.me/5511997743956?text=${msg}`;
       }
 
-      // DOWNLOAD DA SIMULAÇÃO (compartilhável)
-      window.baixarSimulacao = function() {
-        if (state.currentStep !== 4) return;
+      // Helper para retângulos arredondados no canvas
+      function drawRoundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+
+      // FUNÇÃO DE DOWNLOAD DO CARD PNG (padrão do simulador de aposentadoria)
+      async function baixarSimulacao() {
+        try {
+          if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+          }
+        } catch (e) {
+          // Segue mesmo se a API de fontes falhar
+        }
+
+        const width = 1080;
+        const height = 1350;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // Cálculos da simulação atual
         const profile = PROFILES[state.profile];
+        const ratePct = Math.round(profile.rate * 100);
         const rRef = monthlyRate(profile.rate);
         const income = state.capital * rRef;
         const months = state.years * 12;
         const fv = futureValue(state.capital, state.monthly, rRef, months);
-        const text =
-`SIMULAÇÃO DE INVESTIMENTO — Vitor Souza · InvestSmart | XP
------------------------------------------------------------
-Capital inicial: ${fmtBRL(state.capital)}
-Aporte mensal: ${fmtBRL(state.monthly)}
-Prazo: ${state.years} ${state.years === 1 ? 'ano' : 'anos'}
-Perfil: ${profile.name} (hipótese ${Math.round(profile.rate * 100)}% a.a.)
------------------------------------------------------------
-Renda mensal estimada (1º mês): ${fmtBRL(income)}
-Patrimônio projetado: ${fmtBRL(fv)}
------------------------------------------------------------
-Simulação com fins educativos, baseada em hipóteses ilustrativas.
-Rentabilidades passadas não garantem resultados futuros.
-Vitor Souza · Assessor XP Investimentos · @vitorsouzainvest`;
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'simulacao-investimento-vitor-souza.txt';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      };
+
+        const incomeFormatted = `${fmtBRL(income)}/mês`;
+        const fvFormatted = fmtBRL(fv);
+        const capitalFormatted = fmtBRL(state.capital);
+        const aporteFormatted = fmtBRL(state.monthly);
+
+        const firstName = state.userName ? state.userName.trim().split(' ')[0] : 'Investidor';
+
+        // 1. Recorte do card com cantos arredondados de ~56px
+        drawRoundedRect(ctx, 0, 0, width, height, 56);
+        ctx.clip();
+
+        // 2. Fundo off-white
+        ctx.fillStyle = '#FAF8F4';
+        ctx.fillRect(0, 0, width, height);
+
+        // 3. Cabeçalho Navy (0 a 500)
+        ctx.fillStyle = '#101426';
+        ctx.fillRect(0, 0, width, 500);
+
+        // 4. Rodapé Creme (1222 até o fim)
+        ctx.fillStyle = '#F4F1EA';
+        ctx.fillRect(0, 1222, width, height - 1222);
+
+        // === CONTEÚDO DO CABEÇALHO ===
+        ctx.textAlign = 'center';
+
+        // Tag "SIMULAÇÃO DE INVESTIMENTO"
+        ctx.font = '700 21px Montserrat, sans-serif';
+        ctx.fillStyle = '#C6A34E';
+        const tagText = 'S I M U L A Ç Ã O   D E   I N V E S T I M E N T O';
+        ctx.fillText(tagText, 540, 115);
+
+        // Pequena barra decorativa dourada
+        ctx.fillStyle = '#C6A34E';
+        ctx.fillRect(500, 140, 80, 3.5);
+
+        // Primeiro nome do usuário em dourado claro
+        let nameFontSize = 46;
+        ctx.font = `600 ${nameFontSize}px Montserrat, sans-serif`;
+        while (ctx.measureText(firstName).width > 880 && nameFontSize > 28) {
+          nameFontSize -= 2;
+          ctx.font = `600 ${nameFontSize}px Montserrat, sans-serif`;
+        }
+        ctx.fillStyle = '#E8CD78';
+        ctx.fillText(firstName, 540, 215);
+
+        // Título quebrado em 2 linhas centralizadas
+        ctx.font = '800 60px Montserrat, sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText('Quanto seu capital', 540, 330);
+        ctx.fillText('pode render por mês?', 540, 414);
+
+        // === CONTEÚDO DO CORPO ===
+        // Label "RENDA MENSAL ESTIMADA" cinza ~30px (y ~575)
+        ctx.font = '700 30px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText('RENDA MENSAL ESTIMADA', 540, 575);
+
+        // Valor em navy extrabold ~92px (y ~695) com adaptação automática
+        let incomeFontSize = 92;
+        ctx.font = `800 ${incomeFontSize}px Montserrat, sans-serif`;
+        while (ctx.measureText(incomeFormatted).width > 900 && incomeFontSize > 48) {
+          incomeFontSize -= 2;
+          ctx.font = `800 ${incomeFontSize}px Montserrat, sans-serif`;
+        }
+        ctx.fillStyle = '#101426';
+        ctx.fillText(incomeFormatted, 540, 695);
+
+        // Label "PATRIMÔNIO PROJETADO EM X ANOS" cinza ~24px (y ~770)
+        ctx.font = '700 24px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText(`PATRIMÔNIO PROJETADO EM ${state.years} ${state.years === 1 ? 'ANO' : 'ANOS'}`, 540, 770);
+
+        // Valor dourado ~46px (y ~830)
+        let fvFontSize = 46;
+        ctx.font = `800 ${fvFontSize}px Montserrat, sans-serif`;
+        while (ctx.measureText(fvFormatted).width > 900 && fvFontSize > 30) {
+          fvFontSize -= 2;
+          ctx.font = `800 ${fvFontSize}px Montserrat, sans-serif`;
+        }
+        ctx.fillStyle = '#B08C30';
+        ctx.fillText(fvFormatted, 540, 830);
+
+        // Nota do cenário pequena (y ~864)
+        ctx.font = '500 20px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText(`cenário ${profile.name.toLowerCase()} · hipótese de ${ratePct}% a.a.`, 540, 864);
+
+        // Card branco discreto de evolução (y 895-1027, x 120-960)
+        const evoCardX = 120;
+        const evoCardY = 895;
+        const evoCardW = 840;
+        const evoCardH = 132;
+
+        drawRoundedRect(ctx, evoCardX, evoCardY, evoCardW, evoCardH, 22);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#E3DFD3';
+        ctx.stroke();
+
+        ctx.textAlign = 'left';
+        ctx.font = '600 22px Montserrat, sans-serif';
+        ctx.fillStyle = '#101426';
+        ctx.fillText('Evolução ilustrativa do patrimônio', evoCardX + 36, evoCardY + 74);
+
+        // 6 barras verticais arredondadas ascendentes à direita do card
+        const barHeights = [24, 38, 52, 68, 84, 100];
+        const barWidth = 16;
+        const barGap = 16;
+        const totalBarsWidth = (6 * barWidth) + (5 * barGap);
+        const barsStartX = evoCardX + evoCardW - 40 - totalBarsWidth;
+        const barsBaseY = evoCardY + evoCardH - 16;
+
+        for (let i = 0; i < 6; i++) {
+          const bh = barHeights[i];
+          const bx = barsStartX + i * (barWidth + barGap);
+          const by = barsBaseY - bh;
+          const isLast = (i === 5);
+
+          drawRoundedRect(ctx, bx, by, barWidth, bh, 8);
+          ctx.fillStyle = isLast ? '#B08C30' : '#E8CD78';
+          ctx.fill();
+        }
+
+        // Grade de 4 caixas (y ~1052, altura ~100, x 120-960)
+        const boxY = 1052;
+        const boxH = 100;
+        const boxW = 189;
+        const boxGap = 28;
+
+        const boxesData = [
+          { label: 'Capital inicial', val: capitalFormatted },
+          { label: 'Aporte mensal', val: aporteFormatted },
+          { label: 'Prazo', val: `${state.years} ${state.years === 1 ? 'ano' : 'anos'}` },
+          { label: 'Perfil', val: `${profile.name} ${ratePct}%` }
+        ];
+
+        boxesData.forEach((box, i) => {
+          const bx = 120 + i * (boxW + boxGap);
+
+          drawRoundedRect(ctx, bx, boxY, boxW, boxH, 16);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#E3DFD3';
+          ctx.stroke();
+
+          ctx.textAlign = 'center';
+          ctx.font = '600 17px Montserrat, sans-serif';
+          ctx.fillStyle = '#6B6B7A';
+          ctx.fillText(box.label, bx + boxW / 2, boxY + 38);
+
+          let valSize = 22;
+          ctx.font = `700 ${valSize}px Montserrat, sans-serif`;
+          while (ctx.measureText(box.val).width > (boxW - 16) && valSize > 14) {
+            valSize -= 1;
+            ctx.font = `700 ${valSize}px Montserrat, sans-serif`;
+          }
+          ctx.fillStyle = '#101426';
+          ctx.fillText(box.val, bx + boxW / 2, boxY + 76);
+        });
+
+        // Observação pequena centralizada em cinza (~19px, y ~1184)
+        ctx.textAlign = 'center';
+        ctx.font = '500 19px Montserrat, sans-serif';
+        ctx.fillStyle = '#6B6B7A';
+        ctx.fillText('Resultado baseado nas hipóteses utilizadas nesta simulação.', 540, 1176);
+        ctx.fillText('Não representa garantia de rentabilidade ou de renda futura.', 540, 1202);
+
+        // Rodapé creme
+        ctx.font = '700 22px Montserrat, sans-serif';
+        ctx.fillStyle = '#B08C30';
+        ctx.fillText('S I M U L A Ç Ã O   E D U C A T I V A', 540, 1266);
+
+        ctx.font = '600 27px Montserrat, sans-serif';
+        ctx.fillStyle = '#101426';
+        ctx.fillText('Vitor Souza · Assessor XP Investimentos', 540, 1304);
+
+        ctx.font = '700 27px Montserrat, sans-serif';
+        ctx.fillStyle = '#101426';
+        ctx.fillText('@vitorsouzainvest', 540, 1339);
+
+        // Download automático via <a download>
+        const dataUrl = canvas.toDataURL('image/png');
+        const downloadLink = document.createElement('a');
+        downloadLink.download = 'minha-simulacao-investimento-vitor-souza.png';
+        downloadLink.href = dataUrl;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+
+      // Expor para chamada via inline onclick
+      window.baixarSimulacao = baixarSimulacao;
 
       // REDO
       document.getElementById('btnRedoSim').addEventListener('click', () => {
