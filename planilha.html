@@ -1394,6 +1394,13 @@
       box-shadow: 0 4px 14px rgba(16, 20, 38, 0.16);
       font-family: inherit;
     }
+    .btn-plan-alt {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 46px; margin-top: 10px; border-radius: 12px;
+      background: #FFFFFF; color: var(--navy); font-weight: 600; font-size: 13.5px;
+      border: 1.5px solid var(--navy); cursor: pointer; text-decoration: none;
+      font-family: inherit;
+    }
     .success-steps { text-align: left; margin: 20px 0 0; padding: 16px 18px;
       background: var(--cream-card); border: 1px solid var(--line-soft); border-radius: var(--radius-md); }
     .success-steps p { font-size: 12.5px; line-height: 1.6; color: var(--text-main); margin: 0 0 8px; font-weight: 500; }
@@ -1461,11 +1468,12 @@
       <div id="successView" class="success-view" style="display: none;">
         <div class="success-icon">✓</div>
         <h2 class="success-title">Pronto! Sua planilha está liberada.</h2>
-        <p class="success-text">Toque no botão abaixo para abrir. No celular, use o menu (⋮) e escolha <strong>Fazer uma cópia</strong> para poder preencher.</p>
-        <a id="planLink" class="btn-plan-go" href="#" target="_blank" rel="noopener">Abrir a planilha →</a>
+        <p class="success-text">Toque no botão abaixo e confirme <strong>"Fazer uma cópia"</strong>. A cópia é sua, e você preenche direto nela.</p>
+        <a id="planLink" class="btn-plan-go" href="#" target="_blank" rel="noopener">Abrir minha planilha →</a>
+        <a id="planXlsx" class="btn-plan-alt" href="#" target="_blank" rel="noopener">Prefiro baixar em Excel (.xlsx)</a>
         <div class="success-steps">
-          <p>1. Abra a aba <strong>Como usar</strong> antes de começar.</p>
-          <p>2. Preencha só as células amarelas. O resto calcula sozinho.</p>
+          <p>1. Preencha só as <strong>células amarelas</strong>. O resto calcula sozinho.</p>
+          <p>2. Comece pela sua renda do mês. Em 5 minutos você vê a sobra.</p>
           <p>3. Qualquer dúvida, me chame no WhatsApp: <strong>(11) 99774-3956</strong>.</p>
         </div>
       </div>
@@ -1481,7 +1489,8 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const PLAN_URL = 'https://docs.google.com/spreadsheets/d/1JT57Injb9IcfSEWqAWNg8ERAgynIhGLu9xdHlRmCico/edit?gid=0#gid=0';
+      const PLAN_URL = 'https://docs.google.com/spreadsheets/d/1JT57Injb9IcfSEWqAWNg8ERAgynIhGLu9xdHlRmCico/copy';
+      const PLAN_XLSX = 'https://docs.google.com/spreadsheets/d/1JT57Injb9IcfSEWqAWNg8ERAgynIhGLu9xdHlRmCico/export?format=xlsx';
 
       // UTM: captura da origem do trafego
       const UTM_PARAMS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','gclid'];
@@ -1548,6 +1557,7 @@
 
         // Libera a planilha
         document.getElementById('planLink').href = PLAN_URL;
+        document.getElementById('planXlsx').href = PLAN_XLSX;
         formView.style.display = 'none';
         successView.style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
