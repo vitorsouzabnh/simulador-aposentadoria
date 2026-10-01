@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 
   <script>
     !function(f,b,e,v,n,t,s)
@@ -1650,44 +1650,82 @@
         const nome = nameInput.value.trim();
         const renda = soma(CAMPOS.renda), fixas = soma(CAMPOS.fixas), vari = soma(CAMPOS.variaveis);
         const sobra = renda - fixas - vari, meta = renda * 0.1;
-        const linhas = [
-          ['ORGANIZAÇÃO FINANCEIRA PESSOAL'],
-          ['Programa Gratuito de Educação Financeira — Vitor Souza, Assessor de Investimentos (InvestSmart | XP)'],
-          ['Preenchida em ' + new Date().toLocaleDateString('pt-BR') + ' por ' + nome],
-          [],
-          ['RENDA MENSAL', 'VALOR (R$)'],
-          ['Salário líquido', val('r1')],
-          ['Bicos, comissões, horas extras', val('r2')],
-          ['Outras rendas', val('r3')],
-          ['RENDA TOTAL', renda],
-          [],
-          ['DESPESAS FIXAS (todo mês)', 'VALOR (R$)'],
-          ['Moradia', val('f1')], ['Contas', val('f2')], ['Alimentação', val('f3')],
-          ['Transporte', val('f4')], ['Saúde', val('f5')], ['Educação', val('f6')], ['Dívidas', val('f7')],
-          ['FIXAS TOTAL', fixas],
-          [],
-          ['DESPESAS VARIÁVEIS', 'VALOR (R$)'],
-          ['Lazer', val('v1')], ['Roupas e cuidados', val('v2')], ['Presentes e datas', val('v3')], ['Outros', val('v4')],
-          ['VARIÁVEIS TOTAL', vari],
-          [],
-          ['O QUE SOBROU NO MÊS', 'VALOR (R$)'],
-          ['SOBRA', sobra],
-          ['META DE RESERVA (10%)', meta],
-          ['CUMPRINDO A META?', sobra >= meta ? 'SIM' : 'AINDA NÃO'],
-          [],
-          ['REGRA 50/30/20', 'DEVERIA', 'É HOJE'],
-          ['Essencial (até 50%)', renda * 0.5, fixas],
-          ['Lazer (até 30%)', renda * 0.3, vari],
-          ['Futuro (20%)', renda * 0.2, Math.max(0, sobra)],
-          [],
-          ['Material educativo. Não contém recomendação de investimento.'],
-          ['Dúvidas: Vitor Souza — (11) 99774-3956 (WhatsApp) — @vitorsouzainvest']
-        ];
-        const wsX = XLSX.utils.aoa_to_sheet(linhas);
-        wsX['!cols'] = [{ wch: 45 }, { wch: 16 }, { wch: 16 }];
-        const wbX = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wbX, wsX, 'Organização Financeira');
-        XLSX.writeFile(wbX, 'organizacao-financeira-' + nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z]+/g, '-') + '.xlsx');
+        const cumprindo = renda > 0 && sobra >= meta ? 'SIM' : 'AINDA NÃO';
+
+        const NAVY = 'FF0E1B2A', ROXO = 'FF9865FD', LAVANDA = 'FFF2F0FB', VERDE = 'FFE8F5E9', AMARELO = 'FFFFF9C4', CINZA = 'FF666666';
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Organização Financeira', { views: [{ showGridLines: false }] });
+        ws.columns = [{ width: 3 }, { width: 52 }, { width: 18 }, { width: 18 }];
+
+        const put = (r, c, v, opts = {}) => {
+          const cell = ws.getCell(r, c);
+          cell.value = v;
+          if (opts.fill) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: opts.fill } };
+          cell.font = { name: 'Calibri', size: opts.size || 11, bold: !!opts.bold, italic: !!opts.italic, color: { argb: opts.color || 'FF1A1A2E' } };
+          if (opts.align) cell.alignment = { horizontal: opts.align, vertical: 'middle' };
+          if (opts.fmt) cell.numFmt = opts.fmt;
+          cell.border = { top: { style: 'thin', color: { argb: 'FFD9D2F0' } }, left: { style: 'thin', color: { argb: 'FFD9D2F0' } }, bottom: { style: 'thin', color: { argb: 'FFD9D2F0' } }, right: { style: 'thin', color: { argb: 'FFD9D2F0' } } };
+        };
+        const moeda = 'R$ #,##0.00';
+
+        // Cabecalho
+        put(1, 2, 'ORGANIZAÇÃO FINANCEIRA PESSOAL', { bold: true, size: 16, color: 'FF0A1F44', fill: 'FFFFFFFF' });
+        put(2, 2, 'Programa Gratuito de Educação Financeira — Vitor Souza, Assessor de Investimentos (InvestSmart | XP)', { size: 10, color: CINZA, fill: 'FFFFFFFF' });
+        put(3, 2, 'Preenchida em ' + new Date().toLocaleDateString('pt-BR') + ' por ' + nome, { size: 10, color: CINZA, italic: true, fill: 'FFFFFFFF' });
+
+        // RENDA
+        put(5, 2, 'RENDA MENSAL', { fill: ROXO, bold: true, color: 'FFFFFFFF' });
+        put(5, 3, 'VALOR (R$)', { fill: ROXO, bold: true, color: 'FFFFFFFF', align: 'center' });
+        put(6, 2, 'Salário líquido', { fill: 'FFFFFFFF' }); put(6, 3, val('r1'), { fill: AMARELO, fmt: moeda });
+        put(7, 2, 'Bicos, comissões, horas extras', { fill: 'FFFFFFFF' }); put(7, 3, val('r2'), { fill: AMARELO, fmt: moeda });
+        put(8, 2, 'Outras rendas (aluguel, pensão etc.)', { fill: 'FFFFFFFF' }); put(8, 3, val('r3'), { fill: AMARELO, fmt: moeda });
+        put(9, 2, 'RENDA TOTAL', { fill: LAVANDA, bold: true }); put(9, 3, renda, { fill: LAVANDA, bold: true, fmt: moeda });
+
+        // FIXAS
+        put(11, 2, 'DESPESAS FIXAS (todo mês)', { fill: ROXO, bold: true, color: 'FFFFFFFF' });
+        put(11, 3, 'VALOR (R$)', { fill: ROXO, bold: true, color: 'FFFFFFFF', align: 'center' });
+        const fixasLbl = ['Moradia (aluguel/financiamento, condomínio)', 'Contas (luz, água, internet, celular)', 'Alimentação (mercado + refeições)', 'Transporte', 'Saúde (plano, remédios)', 'Educação (escola, cursos)', 'Dívidas (parcelas, cartão, empréstimo)'];
+        fixasLbl.forEach((t, i) => { put(12 + i, 2, t, { fill: 'FFFFFFFF' }); put(12 + i, 3, val('f' + (i + 1)), { fill: AMARELO, fmt: moeda }); });
+        put(19, 2, 'FIXAS TOTAL', { fill: LAVANDA, bold: true }); put(19, 3, fixas, { fill: LAVANDA, bold: true, fmt: moeda });
+
+        // VARIAVEIS
+        put(21, 2, 'DESPESAS VARIÁVEIS (mudam todo mês)', { fill: ROXO, bold: true, color: 'FFFFFFFF' });
+        put(21, 3, 'VALOR (R$)', { fill: ROXO, bold: true, color: 'FFFFFFFF', align: 'center' });
+        const varLbl = ['Lazer (saídas, entregas, streaming)', 'Roupas e cuidados pessoais', 'Presentes e datas', 'Outros gastos do mês'];
+        varLbl.forEach((t, i) => { put(22 + i, 2, t, { fill: 'FFFFFFFF' }); put(22 + i, 3, val('v' + (i + 1)), { fill: AMARELO, fmt: moeda }); });
+        put(26, 2, 'VARIÁVEIS TOTAL', { fill: LAVANDA, bold: true }); put(26, 3, vari, { fill: LAVANDA, bold: true, fmt: moeda });
+
+        // RESULTADO
+        put(28, 2, 'O QUE SOBROU NO MÊS', { fill: NAVY, bold: true, color: 'FFFFFFFF' });
+        put(28, 3, 'VALOR (R$)', { fill: NAVY, bold: true, color: 'FFFFFFFF', align: 'center' });
+        put(29, 2, 'SOBRA (renda − despesas)', { fill: 'FFFFFFFF', bold: true }); put(29, 3, sobra, { fill: VERDE, bold: true, fmt: moeda });
+        put(30, 2, 'META DE RESERVA (10% da renda)', { fill: 'FFFFFFFF' }); put(30, 3, meta, { fill: LAVANDA, bold: true, fmt: moeda });
+        put(31, 2, 'ESTÁ CUMPRINDO A META?', { fill: 'FFFFFFFF' }); put(31, 3, cumprindo, { fill: 'FFFFFFFF', bold: true, align: 'center' });
+
+        // 50/30/20
+        put(33, 2, 'REGRA 50/30/20', { fill: ROXO, bold: true, color: 'FFFFFFFF' });
+        put(33, 3, 'QUANTO DEVERIA SER', { fill: ROXO, bold: true, color: 'FFFFFFFF', align: 'center' });
+        put(33, 4, 'QUANTO É HOJE', { fill: ROXO, bold: true, color: 'FFFFFFFF', align: 'center' });
+        put(34, 2, 'Essencial (até 50%)', { fill: 'FFFFFFFF' }); put(34, 3, renda * 0.5, { fill: LAVANDA, fmt: moeda }); put(34, 4, fixas, { fill: LAVANDA, fmt: moeda });
+        put(35, 2, 'Lazer e desejos (até 30%)', { fill: 'FFFFFFFF' }); put(35, 3, renda * 0.3, { fill: LAVANDA, fmt: moeda }); put(35, 4, vari, { fill: LAVANDA, fmt: moeda });
+        put(36, 2, 'Futuro e dívidas (20%)', { fill: 'FFFFFFFF' }); put(36, 3, renda * 0.2, { fill: LAVANDA, fmt: moeda }); put(36, 4, Math.max(0, sobra), { fill: LAVANDA, fmt: moeda });
+
+        // Rodape
+        put(38, 2, 'Futuro = reserva + investimentos. Se está em zero, comece pelos cortes nas despesas variáveis.', { size: 9, color: CINZA, italic: true, fill: 'FFFFFFFF' });
+        put(40, 2, 'Material educativo. Não contém recomendação de investimento.', { size: 9, color: CINZA, fill: 'FFFFFFFF' });
+        put(41, 2, 'Dúvidas ou diagnóstico gratuito: Vitor Souza — (11) 99774-3956 (WhatsApp) — @vitorsouzainvest', { size: 9, color: CINZA, fill: 'FFFFFFFF' });
+
+        wb.xlsx.writeBuffer().then(buf => {
+          const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const objUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.download = 'organizacao-financeira-' + nome.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z]+/g, '-') + '.xlsx';
+          a.href = objUrl;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(objUrl), 4000);
+        }).catch(() => {});
       });
 
       atualizar();
