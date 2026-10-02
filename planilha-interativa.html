@@ -1711,7 +1711,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           cell.font = { name: 'Calibri', size: opts.size || 11, bold: !!opts.bold, italic: !!opts.italic, color: { argb: opts.color || 'FF1A1A2E' } };
           if (opts.align) cell.alignment = { horizontal: opts.align, vertical: 'middle' };
           if (opts.fmt) cell.numFmt = opts.fmt;
-          cell.border = { top: { style: 'thin', color: { argb: 'FFD9D2F0' } }, left: { style: 'thin', color: { argb: 'FFD9D2F0' } }, bottom: { style: 'thin', color: { argb: 'FFD9D2F0' } }, right: { style: 'thin', color: { argb: 'FFD9D2F0' } } };
+          cell.border = { top: { style: 'thin', color: { argb: 'FFB0B0BE' } }, left: { style: 'thin', color: { argb: 'FFB0B0BE' } }, bottom: { style: 'thin', color: { argb: 'FFB0B0BE' } }, right: { style: 'thin', color: { argb: 'FFB0B0BE' } } };
         };
         const moeda = 'R$ #,##0.00';
 
@@ -1762,6 +1762,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         put(40, 2, 'Material educativo. Não contém recomendação de investimento.', { size: 9, color: CINZA, fill: 'FFFFFFFF' });
         put(41, 2, 'Dúvidas ou diagnóstico gratuito: Vitor Souza — (11) 99774-3956 (WhatsApp) — @vitorsouzainvest', { size: 9, color: CINZA, fill: 'FFFFFFFF' });
 
+        // WPS-proof: pintar fundo branco onde nao ha fill solido (cobre gridlines do WPS mobile)
+        for (let r = 1; r <= 45; r++) {
+          for (let c = 1; c <= 6; c++) {
+            const cell = ws.getCell(r, c);
+            if (!cell.fill || cell.fill.pattern !== 'solid') {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+            }
+          }
+        }
         wb.xlsx.writeBuffer().then(buf => {
           const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
           const objUrl = URL.createObjectURL(blob);
